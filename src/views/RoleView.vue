@@ -21,8 +21,9 @@
         </div>
 
         <!-- Form -->
-        <el-dialog title="权限管理" :visible.sync="dialogFormVisible" width="50%" >
-            <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='320px' openAll v-loading="pageLoading" :title="title"></tree-transfer>
+        <el-dialog title="权限管理" :visible.sync="dialogFormVisible" width="50%">
+            <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='320px' openAll
+                v-loading="pageLoading" :title="title"></tree-transfer>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="dialogFormVisible = false">取 消</el-button>
                 <el-button type="primary" @click="submitContent">确 定</el-button>
@@ -33,17 +34,20 @@
 </template>
 
 <script>
+import { defaultFail } from '@/api/errorNoties';
+import { defaultSuccess } from '@/api/successNoties';
 import treeTransfer from 'el-tree-transfer';
 
 export default {
     data() {
         return {
-            title:["未分配权限","已分配权限"],
-            loading:true,
-            pageLoading:true,
-            tableData:[],
+            title: ["未分配权限", "已分配权限"],
+            loading: true,
+            pageLoading: true,
+            tableData: [],
             leftData: [],
-            rightData:[],
+            rightData: [],
+            selectRoleId: 0,
             total: 0,
             pageSize: 5,
             currentPage: 1,
@@ -60,8 +64,8 @@ export default {
             this.$axios.post(
                 "/role/getAllRole",
                 {
-                    pagen:this.currentPage,
-                    limit:this.pageSize
+                    pagen: this.currentPage,
+                    limit: this.pageSize
                 }
             ).then((res) => {
                 this.loading = false;
@@ -77,36 +81,52 @@ export default {
             this.pageLoading = true;
             this.getAdminMenu(row.roleId);
             this.dialogFormVisible = true
+            this.selectRoleId = row.roleId
             this.$axios.post(
                 "/menu/getDifferentTree",
                 {
-                    roleId:row.roleId
+                    roleId: row.roleId
                 }
-            ).then((res)=>{
+            ).then((res) => {
                 this.leftData = res.data
                 this.pageLoading = false;
-                })
+            })
         },
-        getAdminMenu(roleId){
+        getAdminMenu(roleId) {
             this.$axios.post(
                 "/menu/searchMenuByRoleInEletree",
                 {
                     roleId
                 }
-            ).then((res)=>{
+            ).then((res) => {
                 this.selectedRow = res.data
                 this.rightData = res.data
             })
         },
-        submitContent(){
-            this.dialogFormVisible = false
-            alert("还没做")
+        submitContent() {
+            this.pageLoading = true
+            this.$axios.post(
+                "/menu/editMenuAuthority",
+                {
+                    roleId: this.selectRoleId,
+                    menuData: this.rightData
+                }
+            ).then((res) => {
+                this.pageLoading = false
+                if (res.code == 1) {
+                    this.dialogFormVisible = false
+                    defaultSuccess();
+                }else{
+                    defaultFail()
+                }
+            })
+
         },
-        goBack(){
+        goBack() {
             this.$router.push("/main")
         }
     },
-    components:{
+    components: {
         treeTransfer
     }
 }
@@ -121,15 +141,15 @@ export default {
     line-height: 20px;
 }
 
-.el-transfer-panel__item .el-checkbox__inputt{
+.el-transfer-panel__item .el-checkbox__inputt {
     position: absolute;
     top: 8px;
-    left: 20px !important; 
+    left: 20px !important;
 }
 </style>
 
 <style>
-.transfer-title{
-    margin-top:0; 
+.transfer-title {
+    margin-top: 0;
 }
 </style>
