@@ -11,6 +11,12 @@ Vue.use(VueRouter)
 
 var routes = [
     {
+        name:"/",
+        path:"/",
+        component:()=>import("../views/LoginView"),
+        children:[]
+    },
+    {
         name:"login",
         path:"/login",
         component:()=>import("../views/LoginView"),
@@ -39,6 +45,18 @@ var routes = [
                 component:()=>import("../views/DepartmentView"),
                 children:[]
             },
+            {
+                name:"role",
+                path:"/role",
+                component:()=>import("../views/RoleView"),
+                children:[]
+            },
+            {
+                name:"staff",
+                path:"/staff",
+                component:()=>import("../views/StaffView"),
+                children:[]
+            }
         ]
     }
 ]

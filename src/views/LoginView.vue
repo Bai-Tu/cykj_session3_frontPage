@@ -1,6 +1,6 @@
 <template>
     <div id="outside_container">
-        <div class="container" id="container">
+        <div class="container" id="container" v-loading="loading">
             <div class="form-container sign-in-container">
                 <form onsubmit="return false;">
                     <h1>登陆</h1>
@@ -43,14 +43,15 @@ import { setToken } from '@/utils/authToken';
 export default {
     data() {
         return {
-            acc: "admin",
+            acc: "_admin",
             pwd: "123456",
             rig_acc: "",
             rig_pwd: "",
             rig_name: "",
             rig_age: "",
             check_code: "",
-            imgUrl: "/phy/tool/refreshCheckCode"
+            imgUrl: "/phy/tool/refreshCheckCode",
+            loading: false
         }
     },
     mounted() {
@@ -58,45 +59,68 @@ export default {
     },
     methods: {
         doLogin() {
-            this.$axios.post(
-                "/admin/adminLogin",
-                {
-                    acc: this.acc,
-                    pwd: this.pwd
-                }
-            ).then((res) => {
-                if (res.code == 1) {
-                    // this.$store.dispatch('setAdmin', res.data)
-                    setToken(res.data)
-                    successEnter()
-                    blockForThreeSeconds().then(() => {
-                        if (location.href.includes('?redirect')) {
-                            var urlobj = location.href.split('redirect=')[1];
-                            var newDes = decodeURIComponent(urlobj);
-                            this.$router.push({
-                                path: newDes
-                            })
-                        } else {
-                            this.$router.push({
-                                path: "/main"
-                            })
-                        }
-                    })
-                } else if (res.code == -101) {
-                    accFreeze()
-                } else {
-                    accOrPwdError()
-                }
-            })
+            this.loading = true;
+            if (this.acc.includes('_')) {//管理员
+                this.$axios.post(
+                    "/admin/adminLogin",
+                    {
+                        acc: this.acc,
+                        pwd: this.pwd
+                    }
+                ).then((res) => {
+                    this.loading = false;
+                    if (res.code == 1) {
+                        // this.$store.dispatch('setAdmin', res.data)
+                        setToken(res.data)
+                        successEnter()
+                        blockForThreeSeconds().then(() => {
+                            if (location.href.includes('?redirect')) {
+                                var urlobj = location.href.split('redirect=')[1];
+                                var newDes = decodeURIComponent(urlobj);
+                                this.$router.push({
+                                    path: newDes
+                                })
+                            } else {
+                                this.$router.push({
+                                    path: "/main"
+                                })
+                            }
+                        })
+                    } else if (res.code == -101) {
+                        accFreeze()
+                    } else {
+                        accOrPwdError()
+                    }
+                })
+            } else {
+                this.$axios.post(
+                    "/patient/loginPatient",
+                    {
+                        acc:this.acc,
+                        pwd:this.pwd
+                    }
+                ).then((res)=>{
+                    console.log(res);
+                    
+                })
+            }
+
         },
         refreshCheckCode() {
             this.imgUrl = "/phy/tool/refreshCheckCode?a=" + new Date().getTime();
         },
         doRegister() {
+            this.loading = true;
+            if(this.rig_acc.includes("_")){
+                accNotLegal()
+                return
+            }
+
             if (this.rig_acc.length != 11 && this.rig_acc.length != 18) {
                 accNotLegal()
                 return
             }
+
             this.$axios.post(
                 "/patient/registerPatient",
                 {
@@ -107,6 +131,7 @@ export default {
                     code: this.check_code
                 }
             ).then((res) => {
+                this.loading = false;
                 if (res.code == -2) {
                     checkCodeError()
                 } else if (res.code == -1) {
@@ -115,21 +140,22 @@ export default {
                 } else if (res.code == -100) {
                     systemError()
                 } else {
-                    this.$store.dispatch('setAdmin', res.data)
                     successRigister()
-                    blockForThreeSeconds().then(() => {
-                        if (location.href.includes('?redirect')) {
-                            var urlobj = location.href.split('redirect=')[1];
-                            var newDes = decodeURIComponent(urlobj);
-                            this.$router.push({
-                                path: newDes
-                            })
-                        } else {
-                            this.$router.push({
-                                path: "/main"
-                            })
-                        }
-                    })
+                    alert("跳转还没做")
+                    // this.$store.dispatch('setAdmin', res.data)
+                    // blockForThreeSeconds().then(() => {
+                    //     if (location.href.includes('?redirect')) {
+                    //         var urlobj = location.href.split('redirect=')[1];
+                    //         var newDes = decodeURIComponent(urlobj);
+                    //         this.$router.push({
+                    //             path: newDes
+                    //         })
+                    //     } else {
+                    //         this.$router.push({
+                    //             path: "/main"
+                    //         })
+                    //     }
+                    // })
                 }
             })
         },

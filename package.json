@@ -1,5 +1,5 @@
 {
-  "name": "testproject",
+  "name": "physical",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -39,9 +39,7 @@
     "parserOptions": {
       "parser": "@babel/eslint-parser"
     },
-    "rules": {
-      "no-unused-vars": "warn"
-    }
+    "rules": {}
   },
   "browserslist": [
     "> 1%",

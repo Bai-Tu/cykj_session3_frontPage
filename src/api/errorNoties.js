@@ -3,7 +3,7 @@ import { Notification } from 'element-ui';
 export function accountExist(){
         Notification.error({
         title: '错误',
-        message: '账号已存在'
+        message: '内容已存在'
     })
 }
 
@@ -46,5 +46,12 @@ export function defaultFail(){
     Notification.error({
         title: '错误',
         message: '操作失败'
+    })
+}
+
+export function FailInMsg(msg){
+    Notification.error({
+        title: '错误',
+        message: msg
     })
 }

@@ -1,67 +1,78 @@
 <template>
     <div>
-        <el-page-header @back="goBack" content="权限管理--菜单管理">
+        <el-page-header @back="goBack" content="权限管理-菜单管理">
         </el-page-header>
         <hr>
-        <el-table :data="tableData" style="width: 100%" v-loading="loading" stripe>
-            <el-table-column prop="roleId" label="id" width="200">
-            </el-table-column>
-            <el-table-column prop="roleName" label="名字" width="300">
-            </el-table-column>
-            <el-table-column label="操作">
-                <template slot-scope="scope">
-                    <el-button @click="openForm(scope.row)">编辑</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-        <div class="block">
-            <el-pagination layout="prev, pager, next" :total=total :page-size="pageSize"
-                @current-change="handleCurrentChange" :current-page="currentPage">
-            </el-pagination>
-        </div>
-
-        <!-- Form -->
-        <el-dialog title="权限管理" :visible.sync="dialogFormVisible" width="50%" >
-            <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='320px' openAll v-loading="pageLoading" :title="title"></tree-transfer>
-            <div slot="footer" class="dialog-footer">
-                <el-button @click="dialogFormVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitContent">确 定</el-button>
-            </div>
-        </el-dialog>
 
     </div>
 </template>
 
 <script>
-import treeTransfer from 'el-tree-transfer';
+import { accountExist, defaultFail,FailInMsg } from '@/api/errorNoties';
+import { defaultSuccess } from '@/api/successNoties';
+
 
 export default {
     data() {
         return {
-            title:["未分配权限","已分配权限"],
-            loading:true,
-            pageLoading:true,
-            tableData:[],
-            leftData: [],
-            rightData:[],
+            temSearch: "",
+            searchInput: "",
+            loading: true,
+            pageLoading: true,
             total: 0,
             pageSize: 5,
             currentPage: 1,
             dialogFormVisible: false,
             formLabelWidth: '120px',
-            selectedRow: {}
+            tableData: [],
+            searchPagen: 1,
+            dialogVisible: false,
+            labelPosition: 'right',
+            formLabelAlign: {
+                name: '',
+                type: true
+            },
+            dialogLoading:false
         }
     },
     mounted() {
-        this.getRole();
+        this.getDepartment();
     },
     methods: {
-        getRole() {
+        submitForm(){
+            this.dialogLoading=true
             this.$axios.post(
-                "/role/getAllRole",
+                "/department/addDepartment",
                 {
-                    pagen:this.currentPage,
-                    limit:this.pageSize
+                    departmentName:this.formLabelAlign.name,
+                    departmentStatus:this.formLabelAlign.type?1:0
+                }
+            ).then((res)=>{
+                this.dialogLoading=false
+                if(res.code == 1){
+                    defaultSuccess()
+                    this.dialogVisible = false
+                    this.getDepartment()
+                }else{
+                    accountExist()
+                }
+            })
+            
+        },
+        openDialog() {
+            this.dialogVisible = true,
+            this.formLabelAlign.name = '',
+            this.formLabelAlign.type = true
+        },
+        StatusFormatter(row, column, cellValue) {
+            return cellValue === 1 ? '开启' : '关闭';
+        },
+        getDepartment() {
+            this.$axios.post(
+                "/department/getAllDepartment",
+                {
+                    pagen: this.currentPage,
+                    limit: this.pageSize
                 }
             ).then((res) => {
                 this.loading = false;
@@ -70,44 +81,60 @@ export default {
             })
         },
         handleCurrentChange(index) {
+            this.searchPagen = index
             this.currentPage = index
-            this.getAdmin()
+            if (this.temSearch == '') {
+                this.getDepartment()
+            } else {
+                this.doSearch()
+            }
+
         },
-        openForm(row) {
-            this.pageLoading = true;
-            this.getAdminMenu(row.roleId);
-            this.dialogFormVisible = true
-            this.$axios.post(
-                "/menu/getDifferentTree",
-                {
-                    roleId:row.roleId
-                }
-            ).then((res)=>{
-                this.leftData = res.data
-                this.pageLoading = false;
-                })
+        goBack() {
+            this.$router.push("/main")
         },
-        getAdminMenu(roleId){
+        switchDepartmentStatus(res) {
             this.$axios.post(
-                "/menu/searchMenuByRoleInEletree",
+                "/department/switchDepartmentStatus",
                 {
-                    roleId
+                    departmentId: res.departmentId,
+                    departmentStatus: res.departmentStatus
                 }
-            ).then((res)=>{
-                this.selectedRow = res.data
-                this.rightData = res.data
+            ).then((res) => {
+                if(res.code == -2){
+                    FailInMsg("该科室下还有医生，无法删除");
+                }
+                else if (res.code == 1) {
+                    defaultSuccess()
+                } else {
+                    defaultFail()
+                }
+                this.getDepartment();
             })
         },
-        submitContent(){
-            this.dialogFormVisible = false
+        reset() {
+            this.searchInput = "",
+                this.temSearch = "",
+                this.getDepartment();
         },
-        goBack(){
-            this.$router.push("/main")
+        doSearch() {
+            this.loading = true;
+            this.$axios.post(
+                "/department/getDepartmentInSearch",
+                {
+                    pagen: this.searchPagen,
+                    departmentName: this.searchInput,
+                    limit: this.pageSize
+                }
+            ).then((res) => {
+                this.loading = false;
+                this.temSearch = this.searchInput;
+                this.tableData = res.data.list
+                this.total = res.data.total
+            })
         }
     },
-    components:{
-        treeTransfer
-    }
+
 }
 
 </script>
@@ -120,15 +147,15 @@ export default {
     line-height: 20px;
 }
 
-.el-transfer-panel__item .el-checkbox__inputt{
+.el-transfer-panel__item .el-checkbox__inputt {
     position: absolute;
     top: 8px;
-    left: 20px !important; 
+    left: 20px !important;
 }
 </style>
 
 <style>
-.transfer-title{
-    margin-top:0; 
+.transfer-title {
+    margin-top: 0;
 }
 </style>
