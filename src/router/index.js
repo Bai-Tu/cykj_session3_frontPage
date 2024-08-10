@@ -56,7 +56,19 @@ var routes = [
                 path:"/staff",
                 component:()=>import("../views/StaffView"),
                 children:[]
-            }
+            },
+            {
+                name:"subitem",
+                path:"/subitem",
+                component:()=>import("../views/SubItemView"),
+                children:[]
+            },
+            {
+                name:"project",
+                path:"/project",
+                component:()=>import("../views/ProjectView"),
+                children:[]
+            },
         ]
     }
 ]
@@ -84,9 +96,10 @@ router.beforeEach((to,from,next)=>{
                 store.dispatch("getAdminInfo").then(res=>{
                     if(res){
                         next()
+                    }else{
+                        alert("router有问题")
                     }
                 });
-                
             }else{
                 next()
             }

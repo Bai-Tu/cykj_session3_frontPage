@@ -38,7 +38,8 @@
 import { accFreeze, accNotLegal, accOrPwdError, accountExist, checkCodeError, systemError } from '@/api/errorNoties';
 import { blockForThreeSeconds } from '@/api/outherTools';
 import { successEnter, successRigister } from '@/api/successNoties';
-import { setToken } from '@/utils/authToken';
+import {  setToken } from '@/utils/authToken';
+
 
 export default {
     data() {
@@ -71,7 +72,7 @@ export default {
                     this.loading = false;
                     if (res.code == 1) {
                         // this.$store.dispatch('setAdmin', res.data)
-                        setToken(res.data)
+                        setToken(res.data)        
                         successEnter()
                         blockForThreeSeconds().then(() => {
                             if (location.href.includes('?redirect')) {

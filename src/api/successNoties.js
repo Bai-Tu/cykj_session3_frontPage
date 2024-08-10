@@ -20,3 +20,10 @@ export function defaultSuccess() {
         message: '操作成功'
     })
 }
+
+export function successInMsg(msg){
+    Notification.success({
+        title: '成功',
+        message: msg
+    })
+}

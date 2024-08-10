@@ -17,14 +17,19 @@
             </el-table-column>
             <el-table-column prop="departmentName" label="名字" width="300">
             </el-table-column>
-            <el-table-column prop="departmentStatus" label="状态" width="300" :formatter="StatusFormatter">
+            <el-table-column prop="departmentStatus" label="状态" width="100" >
+                <template slot-scope="stateScope">
+                    <el-switch v-model="stateScope.row.departmentStatus" active-color="#13ce66" inactive-color="#ff4949"
+                        :active-value="1" :inactive-value="0" @change="handleStatusChange(stateScope.row)">
+                    </el-switch>
+                </template>
             </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
                     <el-button @click="openFormDialog(scope.row)" type="primary">编辑</el-button>
-                    <el-button type="danger" v-if="scope.row.departmentStatus == 1"
+                    <!-- <el-button type="danger" v-if="scope.row.departmentStatus == 1"
                         @click="switchDepartmentStatus(scope.row)">隐藏</el-button>
-                    <el-button type="success" v-else @click="switchDepartmentStatus(scope.row)">开启</el-button>
+                    <el-button type="success" v-else @click="switchDepartmentStatus(scope.row)">开启</el-button> -->
                 </template>
             </el-table-column>
         </el-table>
@@ -73,7 +78,7 @@
 </template>
 
 <script>
-import { accountExist, defaultFail, FailInMsg } from '@/api/errorNoties';
+import { accountExist, defaultFail } from '@/api/errorNoties';
 import { defaultSuccess } from '@/api/successNoties';
 
 
@@ -94,7 +99,7 @@ export default {
             dialogVisible: false,
             formDialogVisible: false,
             formDialogName: "",
-            formDialogId:"",
+            formDialogId: "",
             labelPosition: 'right',
             formLabelAlign: {
                 name: '',
@@ -107,19 +112,19 @@ export default {
         this.getDepartment();
     },
     methods: {
-        submitEdit(){
+        submitEdit() {
             this.$axios.post(
                 "/department/editDepartment",
                 {
                     departmentName: this.formDialogName,
                     departmentId: this.formDialogId
                 }
-            ).then((res)=>{
-                if(res.code == 1){
+            ).then((res) => {
+                if (res.code == 1) {
                     defaultSuccess()
                     this.formDialogVisible = false
                     this.getDepartment()
-                }else{
+                } else {
                     defaultFail()
                 }
             })
@@ -155,9 +160,25 @@ export default {
                 this.formLabelAlign.name = '',
                 this.formLabelAlign.type = true
         },
-        StatusFormatter(row, column, cellValue) {
-            return cellValue === 1 ? '开启' : '关闭';
+        handleStatusChange(res){
+            this.$axios.post(
+                "/department/editDepartment",
+                {
+                    departmentId:res.departmentId,
+                    departmentStatus:res.departmentStatus
+                }
+            ).then((res)=>{
+                if(res.code == 1){
+                    this.getDepartment()
+                    defaultSuccess()
+                }else{
+                    defaultFail()
+                }
+            })
+            
         },
+
+
         getDepartment() {
             this.$axios.post(
                 "/department/getAllDepartment",
@@ -184,25 +205,25 @@ export default {
         goBack() {
             this.$router.push("/main")
         },
-        switchDepartmentStatus(res) {
-            this.$axios.post(
-                "/department/switchDepartmentStatus",
-                {
-                    departmentId: res.departmentId,
-                    departmentStatus: res.departmentStatus
-                }
-            ).then((res) => {
-                if (res.code == -2) {
-                    FailInMsg("该科室下还有医生，无法删除");
-                }
-                else if (res.code == 1) {
-                    defaultSuccess()
-                } else {
-                    defaultFail()
-                }
-                this.getDepartment();
-            })
-        },
+        // switchDepartmentStatus(res) {
+        //     this.$axios.post(
+        //         "/department/switchDepartmentStatus",
+        //         {
+        //             departmentId: res.departmentId,
+        //             departmentStatus: res.departmentStatus
+        //         }
+        //     ).then((res) => {
+        //         if (res.code == -2) {
+        //             FailInMsg("该科室下还有医生，无法删除");
+        //         }
+        //         else if (res.code == 1) {
+        //             defaultSuccess()
+        //         } else {
+        //             defaultFail()
+        //         }
+        //         this.getDepartment();
+        //     })
+        // },
         reset() {
             this.searchInput = "",
                 this.temSearch = "",
@@ -214,7 +235,7 @@ export default {
                 "/department/getDepartmentInSearch",
                 {
                     pagen: this.searchPagen,
-                    departmentName: this.searchInput,
+                    name: this.searchInput,
                     limit: this.pageSize
                 }
             ).then((res) => {

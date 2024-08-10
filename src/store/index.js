@@ -9,7 +9,8 @@ var store = new Vuex.Store({//开启状态管理器
     state:{
         admin:{},
         roleList:{},
-        departmentList:{}
+        departmentList:{},
+        menuList:{}
     },
     getters:{
         getAdmin(state){
@@ -20,6 +21,9 @@ var store = new Vuex.Store({//开启状态管理器
         },
         getDepartmentList(state){
             return state.departmentList
+        },
+        getMenuList(state){
+            return state.menuList
         }
     },
     mutations:{
@@ -31,6 +35,9 @@ var store = new Vuex.Store({//开启状态管理器
         },
         setDepartmentList(state,newDepartmentList){
             state.departmentList = newDepartmentList
+        },
+        setMenuList(state,newMenuList){
+            state.menuList = newMenuList
         }
     },
     actions:{
@@ -42,6 +49,9 @@ var store = new Vuex.Store({//开启状态管理器
         },
         setDepartmentList(store,newDepartmentList){
             store.commit("setDepartmentList",newDepartmentList)
+        },
+        setMenuList(store,newMenuList){
+            store.commit("setMenuList",newMenuList)
         },
         async getAdminInfo(store){
             return await http.get(
@@ -55,8 +65,6 @@ var store = new Vuex.Store({//开启状态管理器
                 if(res){
                     if(res.code != -200){
                         store.commit("setAdmin",res.data.adminInfo);
-                        store.commit("setRoleList",res.data.roleList);
-                        store.commit("setDepartmentList",res.data.departmentList)
                         return true;
                     }else{
                         return false;

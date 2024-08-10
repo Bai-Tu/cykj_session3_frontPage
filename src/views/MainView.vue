@@ -3,8 +3,7 @@
         <el-container style="height: 100vh;">
             <el-aside width="auto">
                 <p style="width: 200px;height: 60px; font-size: 20px; 
-                position: relative; bottom: 70px;  text-align: center; right: 10px;"
-                >体检系统后台</p>
+                position: relative; bottom: 70px;  text-align: center; right: 10px;">体检系统后台</p>
                 <el-row class="tac">
                     <el-col :span="24">
                         <el-menu v-for="(item, index) in menuList" :key="item.menuId" :default-active="$route.path"
@@ -51,7 +50,7 @@
                     <router-view></router-view>
                 </el-main>
 
-                <el-footer>ljy  2024/8/8 - 2024/8/23  阿巴阿巴阿巴阿巴</el-footer>
+                <el-footer>ljy 2024/8/8 - 2024/8/23 阿巴阿巴阿巴阿巴</el-footer>
             </el-container>
         </el-container>
     </div>
@@ -71,13 +70,15 @@ export default {
         }
     },
     created() {
-        this.changeIndex();
+        this.$store.dispatch("getAdminInfo")
+        this.getOtherInfo()
     },
-    mounted(){
+    mounted() {
+        this.changeIndex();
         this.getMenu()
     },
     methods: {
-        quitLogin(){
+        quitLogin() {
             this.$router.push(
                 "/login"
             )
@@ -94,17 +95,26 @@ export default {
             console.log(index, indexPath);
         },
         changeIndex() {
-            this.name = this.$store.getters.getAdmin.adminName ;
-            this.roleId = this.$store.getters.getAdmin.adminId;
+            this.name = this.$store.getters.getAdmin.adminName;
+            this.roleId = this.$store.getters.getAdmin.adminId;  
         },
         getMenu() {
+            this.menuList = JSON.parse(sessionStorage.getItem("menuList"));
+        },
+        getOtherInfo() {
+            console.log("getOtherInfo被调用");
+            
             this.$axios.post(
-                "/menu/searchMenuByRoleInTree",
+                "/admin/getAdminOtherInfo",
                 {
-                    roleId: this.roleId,
+                    adminRoleId: this.roleId
                 }
-            ).then((res) => {
-                this.menuList = res.data
+            ).then((otherInfo) => {
+                sessionStorage.setItem("menuList", JSON.stringify(otherInfo.data.menuList))
+                sessionStorage.setItem("departmentList", JSON.stringify(otherInfo.data.departmentList))
+                sessionStorage.setItem("roleList", JSON.stringify(otherInfo.data.roleList))
+            }).catch((err) => {
+                console.log(err);
             })
         }
     }
