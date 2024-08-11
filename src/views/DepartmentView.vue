@@ -17,7 +17,7 @@
             </el-table-column>
             <el-table-column prop="departmentName" label="名字" width="300">
             </el-table-column>
-            <el-table-column prop="departmentStatus" label="状态" width="100" >
+            <el-table-column prop="departmentStatus" label="状态" width="100">
                 <template slot-scope="stateScope">
                     <el-switch v-model="stateScope.row.departmentStatus" active-color="#13ce66" inactive-color="#ff4949"
                         :active-value="1" :inactive-value="0" @change="handleStatusChange(stateScope.row)">
@@ -160,22 +160,22 @@ export default {
                 this.formLabelAlign.name = '',
                 this.formLabelAlign.type = true
         },
-        handleStatusChange(res){
+        handleStatusChange(res) {
             this.$axios.post(
                 "/department/editDepartment",
                 {
-                    departmentId:res.departmentId,
-                    departmentStatus:res.departmentStatus
+                    departmentId: res.departmentId,
+                    departmentStatus: res.departmentStatus
                 }
-            ).then((res)=>{
-                if(res.code == 1){
+            ).then((res) => {
+                if (res.code == 1) {
                     this.getDepartment()
                     defaultSuccess()
-                }else{
+                } else {
                     defaultFail()
                 }
             })
-            
+
         },
 
 
@@ -225,9 +225,10 @@ export default {
         //     })
         // },
         reset() {
-            this.searchInput = "",
-                this.temSearch = "",
-                this.getDepartment();
+            this.searchInput = ""
+            this.temSearch = ""
+            this.currentPage = 1
+            this.getDepartment()
         },
         doSearch() {
             this.loading = true;

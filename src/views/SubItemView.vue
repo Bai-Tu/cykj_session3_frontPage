@@ -23,7 +23,7 @@
             </el-table-column>
             <el-table-column prop="subitemUnit" label="单位" width="150">
             </el-table-column>
-            <el-table-column prop="subitemStatus" label="状态" width="100" >
+            <el-table-column prop="subitemStatus" label="状态" width="100">
                 <template slot-scope="stateScope">
                     <el-switch :value="stateScope.row.subitemStatus" active-color="#13ce66" inactive-color="#ff4949"
                         :active-value="1" :inactive-value="0" @change="handleStatusChange(stateScope.row)">
@@ -77,14 +77,14 @@ export default {
             loading: true,
             pageLoading: true,
             tableData: [],
-            searchInput:"",
-            temSearch:"",
+            searchInput: "",
+            temSearch: "",
             total: 0,
             pageSize: 5,
             currentPage: 1,
             formDialogVisible: false,
             dialogLoading: false,
-            searchPagen:1,
+            searchPagen: 1,
             formLabelWidth: '120px',
             formData: {
                 subitemId: "",
@@ -142,7 +142,7 @@ export default {
                 this.$axios.post(
                     "/subitem/editSubitem",
                     {
-                        subitemId:this.formData.subitemId,
+                        subitemId: this.formData.subitemId,
                         subitemName: this.formData.subitemName,
                         subitemStandardMin: this.formData.subitemStandardMin,
                         subitemStandardMax: this.formData.subitemStandardMax,
@@ -181,11 +181,11 @@ export default {
                 this.canInput = false
             this.formDialogVisible = true
         },
-        handleStatusChange(res){
+        handleStatusChange(res) {
             let changeStatus;
-            if(res.subitemStatus == 1){
+            if (res.subitemStatus == 1) {
                 changeStatus = 0
-            }else{
+            } else {
                 changeStatus = 1
             }
 
@@ -193,21 +193,21 @@ export default {
             this.$axios.post(
                 "/subitem/editSubitemStatus",
                 {
-                    subitemId:res.subitemId,
-                    subitemStatus:changeStatus
+                    subitemId: res.subitemId,
+                    subitemStatus: changeStatus
                 }
-            ).then((res)=>{
-                if(res.code == 1){
+            ).then((res) => {
+                if (res.code == 1) {
                     defaultSuccess()
                     this.getSubitem()
-                }else if(res.code==-2){
+                } else if (res.code == -2) {
                     FailInMsg("该细项还有在其他项目中被使用，无法删除")
                 }
             })
         },
 
         // 查询
-        doSearch(){
+        doSearch() {
             this.loading = true;
             this.$axios.post(
                 "/subitem/getSubitemInSearch",
@@ -224,9 +224,10 @@ export default {
             })
         },
         reset() {
-            this.searchInput = "",
-            this.temSearch = "",
-            this.getSubitem();
+            this.searchInput = ""
+            this.temSearch = ""
+            this.currentPage = 1
+            this.getSubitem()
         },
 
 

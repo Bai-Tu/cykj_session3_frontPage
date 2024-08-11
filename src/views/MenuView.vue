@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import { accountExist, defaultFail,FailInMsg } from '@/api/errorNoties';
+import { accountExist, defaultFail, FailInMsg } from '@/api/errorNoties';
 import { defaultSuccess } from '@/api/successNoties';
 
 
@@ -32,37 +32,37 @@ export default {
                 name: '',
                 type: true
             },
-            dialogLoading:false
+            dialogLoading: false
         }
     },
     mounted() {
         this.getDepartment();
     },
     methods: {
-        submitForm(){
-            this.dialogLoading=true
+        submitForm() {
+            this.dialogLoading = true
             this.$axios.post(
                 "/department/addDepartment",
                 {
-                    departmentName:this.formLabelAlign.name,
-                    departmentStatus:this.formLabelAlign.type?1:0
+                    departmentName: this.formLabelAlign.name,
+                    departmentStatus: this.formLabelAlign.type ? 1 : 0
                 }
-            ).then((res)=>{
-                this.dialogLoading=false
-                if(res.code == 1){
+            ).then((res) => {
+                this.dialogLoading = false
+                if (res.code == 1) {
                     defaultSuccess()
                     this.dialogVisible = false
                     this.getDepartment()
-                }else{
+                } else {
                     accountExist()
                 }
             })
-            
+
         },
         openDialog() {
             this.dialogVisible = true,
-            this.formLabelAlign.name = '',
-            this.formLabelAlign.type = true
+                this.formLabelAlign.name = '',
+                this.formLabelAlign.type = true
         },
         StatusFormatter(row, column, cellValue) {
             return cellValue === 1 ? '开启' : '关闭';
@@ -101,7 +101,7 @@ export default {
                     departmentStatus: res.departmentStatus
                 }
             ).then((res) => {
-                if(res.code == -2){
+                if (res.code == -2) {
                     FailInMsg("该科室下还有医生，无法删除");
                 }
                 else if (res.code == 1) {
@@ -113,9 +113,10 @@ export default {
             })
         },
         reset() {
-            this.searchInput = "",
-                this.temSearch = "",
-                this.getDepartment();
+            this.searchInput = ""
+            this.temSearch = ""
+            this.currentPage = 1
+            this.getDepartment()
         },
         doSearch() {
             this.loading = true;

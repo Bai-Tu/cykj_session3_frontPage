@@ -1,11 +1,11 @@
 <template>
     <div>
-        <el-page-header @back="goBack" content="诊疗内容管理--细项管理">
+        <el-page-header @back="goBack" content="诊疗内容管理--套餐管理">
         </el-page-header>
         <hr>
 
         <div style="text-align: left; padding-left: 20px;padding-bottom: 20px;position: relative; height: 30px">
-            <span>细项名:</span>
+            <span>套餐名:</span>
             <el-input v-model="searchInput" placeholder="请输入内容" style="width:200px; padding-right: 10px"></el-input>
             <el-button type="success" @click="doSearch">搜索</el-button>
             <el-button @click="reset">重置</el-button>
@@ -13,21 +13,28 @@
         </div>
 
         <el-table :data="tableData" style="width: 100%" v-loading="loading" stripe>
-            <el-table-column prop="subitemId" label="id" width="50">
+            <el-table-column prop="projectId" label="id" width="50">
             </el-table-column>
-            <el-table-column prop="subitemName" label="名字" width="200">
+            <el-table-column prop="projectName" label="套餐名字" width="200">
             </el-table-column>
-            <el-table-column prop="subitemStandardMin" label="最小值" width="80">
+            <el-table-column prop="projectPrice" label="套餐价格(￥)" width="120">
             </el-table-column>
-            <el-table-column prop="subitemStandardMax" label="最大值" width="80">
-            </el-table-column>
-            <el-table-column prop="subitemUnit" label="单位" width="150">
-            </el-table-column>
-            <el-table-column prop="subitemStatus" label="状态" width="100" >
+            <el-table-column prop="projectStatus" label="状态" width="100">
                 <template slot-scope="stateScope">
-                    <el-switch :value="stateScope.row.subitemStatus" active-color="#13ce66" inactive-color="#ff4949"
+                    <el-switch :value="stateScope.row.projectStatus" active-color="#13ce66" inactive-color="#ff4949"
                         :active-value="1" :inactive-value="0" @change="handleStatusChange(stateScope.row)">
                     </el-switch>
+                </template>
+            </el-table-column>
+            <el-table-column prop="projectStatus" label="细项" width="200">
+                <template slot-scope="idScope">
+                    <el-popover placement="right" width="300" trigger="click" >
+                        <el-table :data="gridData" v-loading="popoverLoading">
+                            <el-table-column width="50" property="subitemId" label="Id"></el-table-column>
+                            <el-table-column width="250" property="subitemName" label="细项名"></el-table-column>
+                        </el-table>
+                        <el-button slot="reference" @click="getSubitem(idScope.row.projectId)">查看细项</el-button>
+                    </el-popover>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
@@ -76,15 +83,16 @@ export default {
         return {
             loading: true,
             pageLoading: true,
+            popoverLoading:true,
             tableData: [],
-            searchInput:"",
-            temSearch:"",
+            searchInput: "",
+            temSearch: "",
             total: 0,
             pageSize: 5,
             currentPage: 1,
             formDialogVisible: false,
             dialogLoading: false,
-            searchPagen:1,
+            searchPagen: 1,
             formLabelWidth: '120px',
             formData: {
                 subitemId: "",
@@ -92,17 +100,18 @@ export default {
                 subitemStandardMin: "",
                 subitemStandardMax: "",
                 subitemUnit: ""
-            }
+            },
+            gridData: []
         }
     },
     mounted() {
-        this.getSubitem()
+        this.getProject()
     },
     methods: {
         // 数据获取
-        getSubitem() {
+        getProject() {
             this.$axios.post(
-                "/subitem/getAllSubitem",
+                "/project/getAllProject",
                 {
                     pagen: this.currentPage,
                     limit: this.pageSize
@@ -111,6 +120,18 @@ export default {
                 this.loading = false
                 this.tableData = res.data.list
                 this.total = res.data.total
+            })
+        },
+        getSubitem(projectId) {
+            this.popoverLoading = true;
+            this.$axios.post(
+                "/project-subitem/getSubitemById",
+                {
+                    projectId
+                }
+            ).then((res) => {
+                this.gridData = res.data;
+                this.popoverLoading = false;
             })
         },
 
@@ -129,7 +150,7 @@ export default {
                 ).then((res) => {
                     if (res.code == 1) {
                         this.formDialogVisible = false;
-                        this.getSubitem()
+                        this.getProject()
                         successInMsg("添加成功")
                     } else if (res.code == -2) {
                         FailInMsg("细项已存在")
@@ -142,7 +163,7 @@ export default {
                 this.$axios.post(
                     "/subitem/editSubitem",
                     {
-                        subitemId:this.formData.subitemId,
+                        subitemId: this.formData.subitemId,
                         subitemName: this.formData.subitemName,
                         subitemStandardMin: this.formData.subitemStandardMin,
                         subitemStandardMax: this.formData.subitemStandardMax,
@@ -151,7 +172,7 @@ export default {
                 ).then((res) => {
                     if (res.code == 1) {
                         this.formDialogVisible = false
-                        this.getSubitem()
+                        this.getProject()
                         defaultSuccess()
                     } else {
                         defaultFail()
@@ -163,29 +184,29 @@ export default {
         },
         openForm(res) {
             this.formData.subitemId = res.subitemId
-            this.formData.subitemName = res.subitemName,
-                this.formData.subitemStandardMax = res.subitemStandardMax,
-                this.formData.subitemStandardMin = res.subitemStandardMin,
-                this.formData.subitemUnit = res.subitemUnit
+            this.formData.subitemName = res.subitemName
+            this.formData.subitemStandardMax = res.subitemStandardMax
+            this.formData.subitemStandardMin = res.subitemStandardMin
+            this.formData.subitemUnit = res.subitemUnit
 
             this.formDialogVisible = true
             this.canInput = true
         },
         addForm() {
-            this.formData.subitemId = "",
-                this.formData.subitemName = "",
-                this.formData.subitemStandardMax = "",
-                this.formData.subitemStandardMin = "",
-                this.formData.subitemUnit = "",
+            this.formData.subitemId = ""
+            this.formData.subitemName = ""
+            this.formData.subitemStandardMax = ""
+            this.formData.subitemStandardMin = ""
+            this.formData.subitemUnit = ""
 
-                this.canInput = false
+            this.canInput = false
             this.formDialogVisible = true
         },
-        handleStatusChange(res){
+        handleStatusChange(res) {
             let changeStatus;
-            if(res.subitemStatus == 1){
+            if (res.subitemStatus == 1) {
                 changeStatus = 0
-            }else{
+            } else {
                 changeStatus = 1
             }
 
@@ -193,24 +214,24 @@ export default {
             this.$axios.post(
                 "/subitem/editSubitemStatus",
                 {
-                    subitemId:res.subitemId,
-                    subitemStatus:changeStatus
+                    subitemId: res.subitemId,
+                    subitemStatus: changeStatus
                 }
-            ).then((res)=>{
-                if(res.code == 1){
+            ).then((res) => {
+                if (res.code == 1) {
                     defaultSuccess()
-                    this.getSubitem()
-                }else if(res.code==-2){
+                    this.getProject()
+                } else if (res.code == -2) {
                     FailInMsg("该细项还有在其他项目中被使用，无法删除")
                 }
             })
         },
 
         // 查询
-        doSearch(){
+        doSearch() {
             this.loading = true;
             this.$axios.post(
-                "/subitem/getSubitemInSearch",
+                "/project/searchProject",
                 {
                     pagen: this.searchPagen,
                     name: this.searchInput,
@@ -224,9 +245,10 @@ export default {
             })
         },
         reset() {
-            this.searchInput = "",
-            this.temSearch = "",
-            this.getSubitem();
+            this.searchInput = ""
+            this.temSearch = ""
+            this.currentPage = 1
+            this.getProject()
         },
 
 
@@ -235,7 +257,7 @@ export default {
             this.searchPagen = index
             this.currentPage = index
             if (this.temSearch == '') {
-                this.getSubitem()
+                this.getProject()
             } else {
                 this.doSearch()
             }
