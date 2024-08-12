@@ -1,12 +1,15 @@
 <template>
     <div>
-        <el-page-header @back="goBack" content="诊疗内容管理--套餐管理">
+        <el-page-header @back="goBack" content="诊疗内容管理--项目管理">
         </el-page-header>
         <hr>
 
         <div style="text-align: left; padding-left: 20px;padding-bottom: 20px;position: relative; height: 30px">
-            <span>套餐名:</span>
+            <span>项目名:</span>
             <el-input v-model="searchInput" placeholder="请输入内容" style="width:200px; padding-right: 10px"></el-input>
+            <span>价格区间:</span>
+            <el-input v-model="searchInpuLow" placeholder="请输入最低价" style="width:200px; padding-right: 10px"></el-input>
+            <el-input v-model="searchInputHigh" placeholder="请输入最高价" style="width:200px; padding-right: 10px"></el-input>
             <el-button type="success" @click="doSearch">搜索</el-button>
             <el-button @click="reset">重置</el-button>
             <el-button type="primary" style="position: absolute;right: 20px;" @click="addForm">添加</el-button>
@@ -15,9 +18,11 @@
         <el-table :data="tableData" style="width: 100%" v-loading="loading" stripe>
             <el-table-column prop="projectId" label="id" width="50">
             </el-table-column>
-            <el-table-column prop="projectName" label="套餐名字" width="200">
+            <el-table-column prop="projectName" label="项目名字" width="200">
             </el-table-column>
-            <el-table-column prop="projectPrice" label="套餐价格(￥)" width="120">
+            <el-table-column prop="projectPrice" label="项目价格(￥)" width="120">
+            </el-table-column>
+            <el-table-column prop="departmentId" label="所属部门" width="120" :formatter="DepartmentFormatter">
             </el-table-column>
             <el-table-column prop="projectStatus" label="状态" width="100">
                 <template slot-scope="stateScope">
@@ -28,7 +33,7 @@
             </el-table-column>
             <el-table-column prop="projectStatus" label="细项" width="200">
                 <template slot-scope="idScope">
-                    <el-popover placement="right" width="300" trigger="click" >
+                    <el-popover placement="right" width="300" trigger="click">
                         <el-table :data="gridData" v-loading="popoverLoading">
                             <el-table-column width="50" property="subitemId" label="Id"></el-table-column>
                             <el-table-column width="250" property="subitemName" label="细项名"></el-table-column>
@@ -48,20 +53,33 @@
                 @current-change="handleCurrentChange" :current-page="currentPage">
             </el-pagination>
         </div>
+        
 
-        <el-dialog title="细项操作" :visible.sync="formDialogVisible" width="30%" v-loading="dialogLoading">
-            <el-form :model="formData">
-                <el-form-item label="名字" label-width="50px">
-                    <el-input v-model="formData.subitemName" autocomplete="off"></el-input>
+        <el-dialog title="细项操作" :visible.sync="formDialogVisible" width="40%" v-loading="dialogLoading"
+            id="my-custom-dialog">
+            <el-form :model="formData" ref="myformData" :rules="rules" >
+                <el-form-item label="项目名" label-width="100px" prop="projectName">
+                    <el-input v-model="formData.projectName" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="下限" label-width="50px">
-                    <el-input v-model="formData.subitemStandardMin" autocomplete="off"></el-input>
+                <el-form-item label="项目价格" label-width="100px" prop="projectPrice">
+                    <el-input v-model="formData.projectPrice" autocomplete="off" placeholder="￥"></el-input>
                 </el-form-item>
-                <el-form-item label="上限" label-width="50px">
-                    <el-input v-model="formData.subitemStandardMax" autocomplete="off"></el-input>
+                <el-form-item label="项目状态:" label-width="100px">
+                    <el-switch style="display: block;padding-top: 10px;" v-model="formData.projectStatus"
+                        active-color="#13ce66" inactive-color="#ff4949" :active-value="1" :inactive-value="0"
+                        active-text="开启" inactive-text="关闭">
+                    </el-switch>
                 </el-form-item>
-                <el-form-item label="单位" label-width="50px">
-                    <el-input v-model="formData.subitemUnit" autocomplete="off"></el-input>
+                <el-form-item label="部门" label-width="100px" prop="projectDepartment">
+                    <el-select v-model="formData.projectDepartment" placeholder="请选择部门">
+                        <el-option v-for="(item, index) in departmentList" :label="item.departmentName"
+                            :value="index + 1" :key="index"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='320px'
+                        v-loading="pageLoading" :title="title" node_key="subitemId" 
+                        :defaultProps="{ label: 'subitemName' }"></tree-transfer>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -77,15 +95,31 @@
 <script>
 import { defaultFail, FailInMsg } from '@/api/errorNoties';
 import { defaultSuccess, successInMsg } from '@/api/successNoties';
+import treeTransfer from 'el-tree-transfer';
 
 export default {
     data() {
         return {
+            title: ['未分配细项', '已分配细项'],
             loading: true,
+            rules: {
+                projectName: [
+                    { required: true, message: '请输入名字', trigger: 'blur' },
+                ],
+                projectPrice: [
+                    { required: true, message: '请输入价格', trigger: 'blur' },
+                ],
+                projectDepartment: [
+                    { required: true, message: '请输入部门', trigger: 'change' },
+                ]
+            },
             pageLoading: true,
-            popoverLoading:true,
+            popoverLoading: true,
+            departmentList: [],
             tableData: [],
             searchInput: "",
+            searchInpuLow:"",
+            searchInputHigh:"",
             temSearch: "",
             total: 0,
             pageSize: 5,
@@ -94,21 +128,35 @@ export default {
             dialogLoading: false,
             searchPagen: 1,
             formLabelWidth: '120px',
+            leftData: [],
+            rightData: [],
             formData: {
-                subitemId: "",
-                subitemName: "",
-                subitemStandardMin: "",
-                subitemStandardMax: "",
-                subitemUnit: ""
+                projectId: "",
+                projectName: "",
+                projectStatus: 1,
+                projectPrice: "",
+                projectDepartment: ""
             },
-            gridData: []
+            subitemPageVo: {
+                pagen: 1,
+                limit: 5,
+                total: 1,
+
+            },
+            gridData: [],
+            allSubitem: [],
+            multipleSelection: []
         }
     },
     mounted() {
         this.getProject()
+        this.getDepartmentList()
     },
     methods: {
         // 数据获取
+        getDepartmentList() {
+            this.departmentList = JSON.parse(sessionStorage.getItem("departmentList"))
+        },
         getProject() {
             this.$axios.post(
                 "/project/getAllProject",
@@ -137,71 +185,127 @@ export default {
 
         // 数据操作
         submitEdit() {
-            // 当是添加操作时
-            if (this.formData.subitemId == "") {
-                this.$axios.post(
-                    "/subitem/insertSubitem",
-                    {
-                        subitemName: this.formData.subitemName,
-                        subitemStandardMin: this.formData.subitemStandardMin,
-                        subitemStandardMax: this.formData.subitemStandardMax,
-                        subitemUnit: this.formData.subitemUnit
-                    }
-                ).then((res) => {
-                    if (res.code == 1) {
-                        this.formDialogVisible = false;
-                        this.getProject()
-                        successInMsg("添加成功")
-                    } else if (res.code == -2) {
-                        FailInMsg("细项已存在")
+            this.$refs['myformData'].validate((validata) => {
+                if (validata) {
+                    // 当是添加操作时
+                    if (this.formData.projectId == "") {
+                        this.$axios.post(
+                            "/project/addProject",
+                            {
+                                projectName: this.formData.projectName,
+                                projectPrice: this.formData.projectPrice,
+                                projectStatus: this.formData.projectStatus,
+                                departmentId:this.formData.projectDepartment,
+                                subItems: this.rightData
+                            }
+                        ).then((res) => {
+                            if (res.code == 1) {
+                                this.formDialogVisible = false;
+                                this.getProject()
+                                successInMsg("添加成功")
+                            } else if (res.code == -2) {
+                                FailInMsg("细项已存在")
+                            } else {
+                                defaultFail()
+                            }
+                        })
+                        // 当是编辑操作时
                     } else {
-                        defaultFail()
-                    }
-                })
-                // 当是编辑操作时
-            } else {
-                this.$axios.post(
-                    "/subitem/editSubitem",
-                    {
-                        subitemId: this.formData.subitemId,
-                        subitemName: this.formData.subitemName,
-                        subitemStandardMin: this.formData.subitemStandardMin,
-                        subitemStandardMax: this.formData.subitemStandardMax,
-                        subitemUnit: this.formData.subitemUnit
-                    }
-                ).then((res) => {
-                    if (res.code == 1) {
-                        this.formDialogVisible = false
-                        this.getProject()
-                        defaultSuccess()
-                    } else {
-                        defaultFail()
-                    }
-                })
+                        this.$axios.post(
+                            "/project/editProject",
+                            {
+                                projectId: this.formData.projectId,
+                                projectName: this.formData.projectName,
+                                projectPrice: this.formData.projectPrice,
+                                projectStatus: this.formData.projectStatus,
+                                departmentId:this.formData.projectDepartment,
+                                subItems: this.rightData
+                            }
+                        ).then((res) => {
+                            if (res.code == 1) {
+                                this.formDialogVisible = false
+                                this.getProject()
+                                defaultSuccess()
+                            } else {
+                                defaultFail()
+                            }
+                        })
 
-            }
+                    }
+                }else{
+                    FailInMsg("内容不能为空")
+                    return;
+                }
+            })
+
 
         },
+
         openForm(res) {
-            this.formData.subitemId = res.subitemId
-            this.formData.subitemName = res.subitemName
-            this.formData.subitemStandardMax = res.subitemStandardMax
-            this.formData.subitemStandardMin = res.subitemStandardMin
-            this.formData.subitemUnit = res.subitemUnit
+            if(this.$refs['myformData']){
+                this.$refs['myformData'].resetFields()
+            }
+            this.pageLoading = true
+            this.formData.projectId = res.projectId
+            this.formData.projectName = res.projectName
+            this.formData.projectPrice = res.projectPrice
+            this.formData.projectStatus = res.projectStatus
+            this.formData.projectDepartment = res.departmentId
+            
+            this.getDiffSubitem(res)
+            this.getRightSubitem(res)
 
+            this.pageLoading = false;
             this.formDialogVisible = true
-            this.canInput = true
         },
+        // 添加弹窗的内容初始化
         addForm() {
-            this.formData.subitemId = ""
-            this.formData.subitemName = ""
-            this.formData.subitemStandardMax = ""
-            this.formData.subitemStandardMin = ""
-            this.formData.subitemUnit = ""
+            this.pageLoading = true
+            if(this.$refs['myformData']){
+                this.$refs['myformData'].resetFields()
+            }
+            this.formData.projectId = ""
+            this.formData.projectName = ""
+            this.formData.projectPrice = ""
+            this.formData.projectStatus = 1
+            this.formData.projectDepartment = ""
+            this.rightData = []
+            this.getAllSubitem()
 
-            this.canInput = false
+            this.pageLoading = false;
             this.formDialogVisible = true
         },
+        getAllSubitem() {
+            this.$axios.post(
+                "/subitem/getAllSubitemNoVo"
+            ).then((res) => {
+                this.leftData = res.data
+
+            })
+        },
+        getDiffSubitem(res) {
+            this.$axios.post(
+                "/subitem/getDiffSubitem",
+                {
+                    projectId: res.projectId
+                }
+            ).then((res) => {
+                this.leftData = res.data
+
+            })
+        },
+        getRightSubitem(res) {
+            this.$axios.post(
+                "/project-subitem/getSubitemById",
+                {
+                    projectId: res.projectId
+                }
+            ).then((res) => {
+                this.rightData = res.data;
+            })
+        },
+
+        // 状态修改
         handleStatusChange(res) {
             let changeStatus;
             if (res.subitemStatus == 1) {
@@ -209,13 +313,11 @@ export default {
             } else {
                 changeStatus = 1
             }
-
-
             this.$axios.post(
-                "/subitem/editSubitemStatus",
+                "/project/switchProjectStatus",
                 {
-                    subitemId: res.subitemId,
-                    subitemStatus: changeStatus
+                    projectId: res.projectId,
+                    projectStatus: changeStatus
                 }
             ).then((res) => {
                 if (res.code == 1) {
@@ -235,7 +337,9 @@ export default {
                 {
                     pagen: this.searchPagen,
                     name: this.searchInput,
-                    limit: this.pageSize
+                    limit: this.pageSize,
+                    highPrice:this.searchInputHigh,
+                    lowPrice:this.searchInpuLow
                 }
             ).then((res) => {
                 this.loading = false;
@@ -262,10 +366,22 @@ export default {
                 this.doSearch()
             }
         },
+        handleSubitemCurrentChange(index) {
+            this.subitemPageVo.pagen = index
+            this.getAllSubitem();
+        },
+
+        // 数据处理
+        DepartmentFormatter(row, colum, cellValue) {
+            return this.departmentList[cellValue - 1].departmentName
+        },
         // 其他函数
         goBack() {
             this.$router.push("/main")
         }
+    },
+    components: {
+        treeTransfer
     }
 }
 
@@ -284,10 +400,23 @@ export default {
     top: 8px;
     left: 20px !important;
 }
+
+#my-custom-dialog {
+    margin-top: 5px !important;
+}
 </style>
 
 <style>
 .transfer-title {
     margin-top: 0;
+}
+
+.el-dialog {
+    margin-top: 5px !important;
+}
+
+.el-dialog__body,
+.el-dialog__footer {
+    padding-bottom: 5px;
 }
 </style>

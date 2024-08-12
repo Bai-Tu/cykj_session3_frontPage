@@ -99,7 +99,14 @@ export default {
             this.roleId = this.$store.getters.getAdmin.adminId;  
         },
         getMenu() {
-            this.menuList = JSON.parse(sessionStorage.getItem("menuList"));
+            this.$axios.post(
+                "/menu/searchMenuByRoleInTree",
+                {
+                    roleId:this.roleId
+                }
+            ).then((res)=>{
+                this.menuList = res.data
+            })
         },
         getOtherInfo() {
             console.log("getOtherInfo被调用");
@@ -110,7 +117,6 @@ export default {
                     adminRoleId: this.roleId
                 }
             ).then((otherInfo) => {
-                sessionStorage.setItem("menuList", JSON.stringify(otherInfo.data.menuList))
                 sessionStorage.setItem("departmentList", JSON.stringify(otherInfo.data.departmentList))
                 sessionStorage.setItem("roleList", JSON.stringify(otherInfo.data.roleList))
             }).catch((err) => {

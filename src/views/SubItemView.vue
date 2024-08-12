@@ -43,17 +43,17 @@
         </div>
 
         <el-dialog title="细项操作" :visible.sync="formDialogVisible" width="30%" v-loading="dialogLoading">
-            <el-form :model="formData">
-                <el-form-item label="名字" label-width="50px">
+            <el-form :model="formData" ref="formData" :rules="rules">
+                <el-form-item label="名字" label-width="50px" prop="subitemName">
                     <el-input v-model="formData.subitemName" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="下限" label-width="50px">
+                <el-form-item label="下限" label-width="50px" prop="subitemStandardMin">
                     <el-input v-model="formData.subitemStandardMin" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="上限" label-width="50px">
+                <el-form-item label="上限" label-width="50px" prop="subitemStandardMax">
                     <el-input v-model="formData.subitemStandardMax" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="单位" label-width="50px">
+                <el-form-item label="单位" label-width="50px" prop="subitemUnit">
                     <el-input v-model="formData.subitemUnit" autocomplete="off"></el-input>
                 </el-form-item>
             </el-form>
@@ -76,6 +76,21 @@ export default {
         return {
             loading: true,
             pageLoading: true,
+            rules: {
+                subitemName: [
+                    { required: true, message: '请输入名字', trigger: 'blur' }
+                ],
+                subitemStandardMin: [
+                    { required: true, message: '请输入最小值', trigger: 'blur' }
+                ],
+                subitemStandardMax: [
+                    { required: true, message: '请输入最大值', trigger: 'blur' }
+                ],
+                subitemUnit: [
+                    { required: true, message: '请输入单位', trigger: 'change' }
+                ]
+
+            },
             tableData: [],
             searchInput: "",
             temSearch: "",
@@ -116,69 +131,85 @@ export default {
 
         // 数据操作
         submitEdit() {
-            // 当是添加操作时
-            if (this.formData.subitemId == "") {
-                this.$axios.post(
-                    "/subitem/insertSubitem",
-                    {
-                        subitemName: this.formData.subitemName,
-                        subitemStandardMin: this.formData.subitemStandardMin,
-                        subitemStandardMax: this.formData.subitemStandardMax,
-                        subitemUnit: this.formData.subitemUnit
-                    }
-                ).then((res) => {
-                    if (res.code == 1) {
-                        this.formDialogVisible = false;
-                        this.getSubitem()
-                        successInMsg("添加成功")
-                    } else if (res.code == -2) {
-                        FailInMsg("细项已存在")
-                    } else {
-                        defaultFail()
-                    }
-                })
-                // 当是编辑操作时
-            } else {
-                this.$axios.post(
-                    "/subitem/editSubitem",
-                    {
-                        subitemId: this.formData.subitemId,
-                        subitemName: this.formData.subitemName,
-                        subitemStandardMin: this.formData.subitemStandardMin,
-                        subitemStandardMax: this.formData.subitemStandardMax,
-                        subitemUnit: this.formData.subitemUnit
-                    }
-                ).then((res) => {
-                    if (res.code == 1) {
-                        this.formDialogVisible = false
-                        this.getSubitem()
-                        defaultSuccess()
-                    } else {
-                        defaultFail()
-                    }
-                })
-
+            if (this.formData.subitemStandardMin >= this.formData.subitemStandardMax) {
+                FailInMsg("最大值不能小于最小值")
+                return
             }
+            this.$refs['formData'].validate((validate) => {
+                if (validate) {
+                    // 当是添加操作时
+                    if (this.formData.subitemId == "") {
+                        this.$axios.post(
+                            "/subitem/insertSubitem",
+                            {
+                                subitemName: this.formData.subitemName,
+                                subitemStandardMin: this.formData.subitemStandardMin,
+                                subitemStandardMax: this.formData.subitemStandardMax,
+                                subitemUnit: this.formData.subitemUnit
+                            }
+                        ).then((res) => {
+                            if (res.code == 1) {
+                                this.formDialogVisible = false;
+                                this.getSubitem()
+                                successInMsg("添加成功")
+                            } else if (res.code == -2) {
+                                FailInMsg("细项已存在")
+                            } else {
+                                defaultFail()
+                            }
+                        })
+                        // 当是编辑操作时
+                    } else {
+                        this.$axios.post(
+                            "/subitem/editSubitem",
+                            {
+                                subitemId: this.formData.subitemId,
+                                subitemName: this.formData.subitemName,
+                                subitemStandardMin: this.formData.subitemStandardMin,
+                                subitemStandardMax: this.formData.subitemStandardMax,
+                                subitemUnit: this.formData.subitemUnit
+                            }
+                        ).then((res) => {
+                            if (res.code == 1) {
+                                this.formDialogVisible = false
+                                this.getSubitem()
+                                defaultSuccess()
+                            } else {
+                                defaultFail()
+                            }
+                        })
+
+                    }
+                } else {
+                    FailInMsg("内容不能为空")
+                }
+            })
+
 
         },
         openForm(res) {
             this.formData.subitemId = res.subitemId
-            this.formData.subitemName = res.subitemName,
-                this.formData.subitemStandardMax = res.subitemStandardMax,
-                this.formData.subitemStandardMin = res.subitemStandardMin,
-                this.formData.subitemUnit = res.subitemUnit
+            this.formData.subitemName = res.subitemName
+            this.formData.subitemStandardMax = res.subitemStandardMax
+            this.formData.subitemStandardMin = res.subitemStandardMin
+            this.formData.subitemUnit = res.subitemUnit
 
             this.formDialogVisible = true
             this.canInput = true
         },
-        addForm() {
-            this.formData.subitemId = "",
-                this.formData.subitemName = "",
-                this.formData.subitemStandardMax = "",
-                this.formData.subitemStandardMin = "",
-                this.formData.subitemUnit = "",
 
-                this.canInput = false
+        addForm() {
+            this.formData.subitemId = ""
+            this.formData.subitemName = ""
+            this.formData.subitemStandardMax = ""
+            this.formData.subitemStandardMin = ""
+            this.formData.subitemUnit = ""
+
+            if (this.$refs['formData']) {
+                this.$refs['formData'].resetFields()
+            }
+
+            this.canInput = false
             this.formDialogVisible = true
         },
         handleStatusChange(res) {

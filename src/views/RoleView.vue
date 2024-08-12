@@ -22,8 +22,8 @@
 
         <!-- Form -->
         <el-dialog title="权限管理" :visible.sync="dialogFormVisible" width="50%">
-            <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='320px' openAll
-                v-loading="pageLoading" :title="title"></tree-transfer>
+            <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='500px' openAll   
+            v-loading="pageLoading" :title="title"></tree-transfer>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="dialogFormVisible = false">取 消</el-button>
                 <el-button type="primary" @click="submitContent">确 定</el-button>

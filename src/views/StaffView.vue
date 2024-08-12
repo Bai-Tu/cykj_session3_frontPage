@@ -40,21 +40,21 @@
         </div>
 
         <el-dialog title="员工操作" :visible.sync="formDialogVisible" width="30%" v-loading="dialogLoading">
-            <el-form :model="formData">
-                <el-form-item label="账号" label-width="50px">
+            <el-form ref="formData" :model="formData" :rules="rules">
+                <el-form-item label="账号" label-width="50px" prop="adminAccount">
                     <el-input v-model="formData.adminAccount" autocomplete="off" :disabled="canInput"
                         placeholder="新增账号前默认会添加 _ 用做区分"></el-input>
                 </el-form-item>
-                <el-form-item label="昵称" label-width="50px">
+                <el-form-item label="昵称" label-width="50px" prop="adminName">
                     <el-input v-model="formData.adminName" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="身份" label-width="50px">
+                <el-form-item label="身份" label-width="50px" prop="adminRole">
                     <el-select v-model="formData.adminRoleId" placeholder="请选择身份">
                         <el-option v-for="(item, index) in roleList" :label="item.roleName" :value="index + 1"
                             :key="index + 100"></el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="部门" label-width="50px">
+                <el-form-item label="部门" label-width="50px" prop="adminDepartment">
                     <el-select v-model="formData.adminDepartmentId" placeholder="请选择部门">
                         <el-option v-for="(item, index) in departmentList" :label="item.departmentName"
                             :value="index + 1" :key="index"></el-option>
@@ -79,6 +79,20 @@ import { defaultSuccess, successInMsg } from '@/api/successNoties';
 export default {
     data() {
         return {
+            rules: {
+                adminAccount: [
+                    { required: true, message: '请输入账号', trigger: 'blur' },
+                ],
+                adminName: [
+                    { required: true, message: '请输入昵称', trigger: 'blur' },
+                ],
+                adminRole: [
+                    { required: true, message: '请选择身份', trigger: 'change' },
+                ],
+                adminDepartment: [
+                    { required: true, message: '请选择部门', trigger: 'change' },
+                ]
+            },
             loading: true,
             pageLoading: true,
             tableData: [],
@@ -126,48 +140,56 @@ export default {
 
         // 数据操作
         submitEdit() {
-            // 当是添加操作时
-            if (this.formData.adminId == "") {
-                this.$axios.post(
-                    "/admin/addAdmin",
-                    {
-                        adminName: this.formData.adminName,
-                        adminAccount: "_" + this.formData.adminAccount,
-                        adminDepartmentId: this.formData.adminDepartmentId,
-                        adminRoleId: this.formData.adminRoleId
-                    }
-                ).then((res) => {
-                    if (res.code == 1) {
-                        this.formDialogVisible = false;
-                        this.getAdmin()
-                        successInMsg("添加成功，默认密码123456")
-                    } else if (res.code == -2) {
-                        FailInMsg("账号已存在")
+            this.$refs['formData'].validate((valid) => {
+                if (valid) {
+                    // 当是添加操作时
+                    if (this.formData.adminId == "") {
+                        this.$axios.post(
+                            "/admin/addAdmin",
+                            {
+                                adminName: this.formData.adminName,
+                                adminAccount: "_" + this.formData.adminAccount,
+                                adminDepartmentId: this.formData.adminDepartmentId,
+                                adminRoleId: this.formData.adminRoleId
+                            }
+                        ).then((res) => {
+                            if (res.code == 1) {
+                                this.formDialogVisible = false;
+                                this.getAdmin()
+                                successInMsg("添加成功，默认密码123456")
+                            } else if (res.code == -2) {
+                                FailInMsg("账号已存在")
+                            } else {
+                                defaultFail()
+                            }
+                        })
+                        // 当是编辑操作时
                     } else {
-                        defaultFail()
-                    }
-                })
-                // 当是编辑操作时
-            } else {
-                this.$axios.post(
-                    "/admin/editAdmin",
-                    {
-                        adminId: this.formData.adminId,
-                        adminName: this.formData.adminName,
-                        adminDepartmentId: this.formData.adminDepartmentId,
-                        adminRoleId: this.formData.adminRoleId
-                    }
-                ).then((res) => {
-                    if (res.code == 1) {
-                        this.formDialogVisible = false
-                        this.getAdmin()
-                        defaultSuccess()
-                    } else {
-                        defaultFail()
-                    }
-                })
+                        this.$axios.post(
+                            "/admin/editAdmin",
+                            {
+                                adminId: this.formData.adminId,
+                                adminName: this.formData.adminName,
+                                adminDepartmentId: this.formData.adminDepartmentId,
+                                adminRoleId: this.formData.adminRoleId
+                            }
+                        ).then((res) => {
+                            if (res.code == 1) {
+                                this.formDialogVisible = false
+                                this.getAdmin()
+                                defaultSuccess()
+                            } else {
+                                defaultFail()
+                            }
+                        })
 
-            }
+                    }
+                } else {
+                    FailInMsg("内容不能为空")
+                    return false
+                }
+            })
+
 
         },
         resetPwd(res) {
@@ -201,23 +223,27 @@ export default {
         },
         openForm(res) {
             this.formData.adminAccount = res.adminAccount
-            this.formData.adminId = res.adminId,
-                this.formData.adminRoleId = res.adminRoleId,
-                this.formData.adminDepartmentId = res.adminDepartmentId,
-                this.formData.adminName = res.adminName
+            this.formData.adminId = res.adminId
+            this.formData.adminRoleId = res.adminRoleId
+            this.formData.adminDepartmentId = res.adminDepartmentId
+            this.formData.adminName = res.adminName
 
             this.formDialogVisible = true
             this.canInput = true
         },
         addForm() {
-            this.formData.adminAccount = "",
-                this.formData.adminId = "",
-                this.formData.adminRoleId = "",
-                this.formData.adminDepartmentId = "",
-                this.formData.adminName = "",
-
-                this.canInput = false
+            this.formData.adminAccount = ""
+            this.formData.adminId = ""
+            this.formData.adminRoleId = ""
+            this.formData.adminDepartmentId = ""
+            this.formData.adminName = ""
             this.formDialogVisible = true
+            if(this.$refs['formData']){
+                this.$refs['formData'].resetFields()
+            }
+            
+            this.canInput = false
+            
         },
 
         // 表格操作
@@ -225,22 +251,22 @@ export default {
             this.currentPage = index
             this.getAdmin()
         },
-        handleStatusChange(res){
+        handleStatusChange(res) {
             this.$axios.post(
                 "/admin/editAdmin",
                 {
-                    adminId:res.adminId,
-                    adminStatus:res.adminStatus
+                    adminId: res.adminId,
+                    adminStatus: res.adminStatus
                 }
-            ).then((res)=>{
-                if(res.code == 1){
+            ).then((res) => {
+                if (res.code == 1) {
                     this.getAdmin()
                     defaultSuccess()
-                }else{
+                } else {
                     defaultFail()
                 }
             })
-            
+
         },
 
         // 数据处理

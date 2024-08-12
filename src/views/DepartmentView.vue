@@ -44,8 +44,9 @@
         <el-dialog title="添加科室" :visible.sync="dialogVisible" width="30%" center v-loading="dialogLoading">
             <div>
                 <div style="margin: 20px;"></div>
-                <el-form :label-position="labelPosition" label-width="80px" :model="formLabelAlign">
-                    <el-form-item label="名称:">
+                <el-form :label-position="labelPosition" label-width="80px" :model="formLabelAlign" ref="formLabelAlign"
+                    :rules="rules">
+                    <el-form-item label="名称:" prop="name">
                         <el-input v-model="formLabelAlign.name"></el-input>
                     </el-form-item>
                     <el-form-item label="科室状态:">
@@ -78,7 +79,7 @@
 </template>
 
 <script>
-import { accountExist, defaultFail } from '@/api/errorNoties';
+import { accountExist, defaultFail, FailInMsg } from '@/api/errorNoties';
 import { defaultSuccess } from '@/api/successNoties';
 
 
@@ -87,6 +88,11 @@ export default {
         return {
             temSearch: "",
             searchInput: "",
+            rules: {
+                name: [
+                    { required: true, message: '请输入账号', trigger: 'blur' }
+                ]
+            },
             loading: true,
             pageLoading: true,
             total: 0,
@@ -113,21 +119,28 @@ export default {
     },
     methods: {
         submitEdit() {
-            this.$axios.post(
-                "/department/editDepartment",
-                {
-                    departmentName: this.formDialogName,
-                    departmentId: this.formDialogId
-                }
-            ).then((res) => {
-                if (res.code == 1) {
-                    defaultSuccess()
-                    this.formDialogVisible = false
-                    this.getDepartment()
+            this.$refs['formLabelAlign'].validate((validate) => {
+                if (validate) {
+                    this.$axios.post(
+                        "/department/editDepartment",
+                        {
+                            departmentName: this.formDialogName,
+                            departmentId: this.formDialogId
+                        }
+                    ).then((res) => {
+                        if (res.code == 1) {
+                            defaultSuccess()
+                            this.formDialogVisible = false
+                            this.getDepartment()
+                        } else {
+                            defaultFail()
+                        }
+                    })
                 } else {
-                    defaultFail()
+                    FailInMsg("名称不能为空")
                 }
             })
+
 
         },
         openFormDialog(res) {
@@ -137,28 +150,38 @@ export default {
         },
         submitForm() {
             this.dialogLoading = true
-            this.$axios.post(
-                "/department/addDepartment",
-                {
-                    departmentName: this.formLabelAlign.name,
-                    departmentStatus: this.formLabelAlign.type ? 1 : 0
-                }
-            ).then((res) => {
-                this.dialogLoading = false
-                if (res.code == 1) {
-                    defaultSuccess()
-                    this.dialogVisible = false
-                    this.getDepartment()
+            this.$refs['formLabelAlign'].validate((validate) => {
+                if (validate) {
+                    this.$axios.post(
+                        "/department/addDepartment",
+                        {
+                            departmentName: this.formLabelAlign.name,
+                            departmentStatus: this.formLabelAlign.type ? 1 : 0
+                        }
+                    ).then((res) => {
+                        this.dialogLoading = false
+                        if (res.code == 1) {
+                            defaultSuccess()
+                            this.dialogVisible = false
+                            this.getDepartment()
+                        } else {
+                            accountExist()
+                        }
+                    })
                 } else {
-                    accountExist()
+                    FailInMsg("名字不能为空")
+                    this.dialogLoading = false
                 }
             })
 
         },
         openDialog() {
-            this.dialogVisible = true,
-                this.formLabelAlign.name = '',
-                this.formLabelAlign.type = true
+            this.dialogVisible = true
+            this.formLabelAlign.name = ''
+            this.formLabelAlign.type = true
+            if(this.$refs['formLabelAlign']){
+                this.$refs['formLabelAlign'].resetFields()
+            }
         },
         handleStatusChange(res) {
             this.$axios.post(
