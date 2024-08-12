@@ -69,6 +69,12 @@ var routes = [
                 component:()=>import("../views/ProjectView"),
                 children:[]
             },
+            {
+                name:"combo",
+                path:"/combo",
+                component:()=>import("../views/ComboView"),
+                children:[]
+            },
         ]
     }
 ]

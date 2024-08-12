@@ -1,11 +1,11 @@
 <template>
     <div>
-        <el-page-header @back="goBack" content="诊疗内容管理--项目管理">
+        <el-page-header @back="goBack" content="诊疗内容管理--套餐管理">
         </el-page-header>
         <hr>
 
         <div style="text-align: left; padding-left: 20px;padding-bottom: 20px;position: relative; height: 30px">
-            <span>项目名:</span>
+            <span>套餐名:</span>
             <el-input v-model="searchInput" placeholder="请输入内容" style="width:200px; padding-right: 10px"></el-input>
             <span>价格区间:</span>
             <el-input v-model="searchInpuLow" placeholder="请输入最低价" style="width:200px; padding-right: 10px"></el-input>
@@ -16,29 +16,29 @@
         </div>
 
         <el-table :data="tableData" style="width: 100%" v-loading="loading" stripe>
-            <el-table-column prop="projectId" label="id" width="50">
+            <el-table-column prop="comboId" label="id" width="50">
             </el-table-column>
-            <el-table-column prop="projectName" label="项目名字" width="200">
+            <el-table-column prop="comboName" label="项目名字" width="200">
             </el-table-column>
-            <el-table-column prop="projectPrice" label="项目价格(￥)" width="120">
+            <el-table-column prop="comboPrice" label="项目价格(￥)" width="120">
             </el-table-column>
-            <el-table-column prop="departmentId" label="所属部门" width="120" :formatter="DepartmentFormatter">
+            <!-- <el-table-column prop="departmentId" label="所属部门" width="120" :formatter="DepartmentFormatter">
             </el-table-column>
-            <el-table-column prop="projectStatus" label="状态" width="100">
+            <el-table-column prop="comboStatus" label="状态" width="100">
                 <template slot-scope="stateScope">
                     <el-switch :value="stateScope.row.projectStatus" active-color="#13ce66" inactive-color="#ff4949"
                         :active-value="1" :inactive-value="0" @change="handleStatusChange(stateScope.row)">
                     </el-switch>
                 </template>
-            </el-table-column>
-            <el-table-column prop="projectStatus" label="细项" width="200">
+            </el-table-column> -->
+            <el-table-column prop="comboIndex" label="项目内容" width="200">
                 <template slot-scope="idScope">
                     <el-popover placement="right" width="300" trigger="click">
                         <el-table :data="gridData" v-loading="popoverLoading">
-                            <el-table-column width="50" property="subitemId" label="Id"></el-table-column>
-                            <el-table-column width="250" property="subitemName" label="细项名"></el-table-column>
+                            <el-table-column width="50" property="projectId" label="Id"></el-table-column>
+                            <el-table-column width="250" property="projectName" label="套餐名"></el-table-column>
                         </el-table>
-                        <el-button slot="reference" @click="getSubitem(idScope.row.projectId)">查看细项</el-button>
+                        <el-button slot="reference" @click="getProject(idScope.row.comboId)">查看项目</el-button>
                     </el-popover>
                 </template>
             </el-table-column>
@@ -55,13 +55,13 @@
         </div>
         
 
-        <el-dialog title="项目操作" :visible.sync="formDialogVisible" width="40%" v-loading="dialogLoading"
+        <el-dialog title="套餐操作" :visible.sync="formDialogVisible" width="40%" v-loading="dialogLoading"
             id="my-custom-dialog">
             <el-form :model="formData" ref="myformData" :rules="rules" >
-                <el-form-item label="项目名" label-width="100px" prop="projectName">
+                <el-form-item label="套餐名" label-width="100px" prop="comboName">
                     <el-input v-model="formData.projectName" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="项目价格" label-width="100px" prop="projectPrice">
+                <el-form-item label="套餐价格" label-width="100px" prop="comboPrice">
                     <el-input v-model="formData.projectPrice" autocomplete="off" placeholder="￥"></el-input>
                 </el-form-item>
                 <el-form-item label="项目状态:" label-width="100px">
@@ -103,10 +103,10 @@ export default {
             title: ['未分配细项', '已分配细项'],
             loading: true,
             rules: {
-                projectName: [
+                comboName: [
                     { required: true, message: '请输入名字', trigger: 'blur' },
                 ],
-                projectPrice: [
+                comboPrice: [
                     { required: true, message: '请输入价格', trigger: 'blur' },
                 ],
                 projectDepartment: [
@@ -149,17 +149,17 @@ export default {
         }
     },
     mounted() {
-        this.getProject()
-        this.getDepartmentList()
+        this.getCombo()
+        // this.getDepartmentList()
     },
     methods: {
         // 数据获取
-        getDepartmentList() {
-            this.departmentList = JSON.parse(sessionStorage.getItem("departmentList"))
-        },
-        getProject() {
+        // getDepartmentList() {
+        //     this.departmentList = JSON.parse(sessionStorage.getItem("departmentList"))
+        // },
+        getCombo() {
             this.$axios.post(
-                "/project/getAllProject",
+                "/combo/getAllComboByPage",
                 {
                     pagen: this.currentPage,
                     limit: this.pageSize
@@ -170,12 +170,12 @@ export default {
                 this.total = res.data.total
             })
         },
-        getSubitem(projectId) {
+        getProject(comboId) {
             this.popoverLoading = true;
             this.$axios.post(
-                "/project-subitem/getSubitemById",
+                "/combo-project/getProjectByComboId",
                 {
-                    projectId
+                    comboId
                 }
             ).then((res) => {
                 this.gridData = res.data;
@@ -333,7 +333,7 @@ export default {
         doSearch() {
             this.loading = true;
             this.$axios.post(
-                "/project/searchProject",
+                "/combo/searchCombo",
                 {
                     pagen: this.searchPagen,
                     name: this.searchInput,
@@ -354,7 +354,7 @@ export default {
             this.searchInpuLow=""
             this.searchInputHigh=""
             this.currentPage = 1
-            this.getProject()
+            this.getCombo()
         },
 
 
@@ -363,20 +363,16 @@ export default {
             this.searchPagen = index
             this.currentPage = index
             if (this.temSearch == '') {
-                this.getProject()
+                this.getCombo()
             } else {
                 this.doSearch()
             }
         },
-        handleSubitemCurrentChange(index) {
-            this.subitemPageVo.pagen = index
-            this.getAllSubitem();
-        },
 
         // 数据处理
-        DepartmentFormatter(row, colum, cellValue) {
-            return this.departmentList[cellValue - 1].departmentName
-        },
+        // DepartmentFormatter(row, colum, cellValue) {
+        //     return this.departmentList[cellValue - 1].departmentName
+        // },
         // 其他函数
         goBack() {
             this.$router.push("/main")
