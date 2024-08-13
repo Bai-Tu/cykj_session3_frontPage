@@ -22,29 +22,27 @@
             </el-table-column>
             <el-table-column prop="comboPrice" label="项目价格(￥)" width="120">
             </el-table-column>
-            <!-- <el-table-column prop="departmentId" label="所属部门" width="120" :formatter="DepartmentFormatter">
-            </el-table-column>
             <el-table-column prop="comboStatus" label="状态" width="100">
                 <template slot-scope="stateScope">
-                    <el-switch :value="stateScope.row.projectStatus" active-color="#13ce66" inactive-color="#ff4949"
+                    <el-switch :value="stateScope.row.comboStatus" active-color="#13ce66" inactive-color="#ff4949"
                         :active-value="1" :inactive-value="0" @change="handleStatusChange(stateScope.row)">
                     </el-switch>
                 </template>
-            </el-table-column> -->
+            </el-table-column> 
             <el-table-column prop="comboIndex" label="项目内容" width="200">
-                <template slot-scope="idScope">
+                <template slot-scope="idScope_pro">
                     <el-popover placement="right" width="300" trigger="click">
                         <el-table :data="gridData" v-loading="popoverLoading">
                             <el-table-column width="50" property="projectId" label="Id"></el-table-column>
                             <el-table-column width="250" property="projectName" label="套餐名"></el-table-column>
                         </el-table>
-                        <el-button slot="reference" @click="getProject(idScope.row.comboId)">查看项目</el-button>
+                        <el-button slot="reference" @click="getProject(idScope_pro.row.comboId)">查看项目</el-button>
                     </el-popover>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
-                    <el-button @click="openForm(scope.row)" type="primary">编辑</el-button>
+                    <el-button @click="openProjectForm(scope.row)" type="primary">编辑</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -59,27 +57,21 @@
             id="my-custom-dialog">
             <el-form :model="formData" ref="myformData" :rules="rules" >
                 <el-form-item label="套餐名" label-width="100px" prop="comboName">
-                    <el-input v-model="formData.projectName" autocomplete="off"></el-input>
+                    <el-input v-model="formData.comboName" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="套餐价格" label-width="100px" prop="comboPrice">
-                    <el-input v-model="formData.projectPrice" autocomplete="off" placeholder="￥"></el-input>
+                    <el-input v-model="formData.comboPrice" autocomplete="off" placeholder="￥"></el-input>
                 </el-form-item>
-                <el-form-item label="项目状态:" label-width="100px">
-                    <el-switch style="display: block;padding-top: 10px;" v-model="formData.projectStatus"
+                <el-form-item label="套餐状态:" label-width="100px">
+                    <el-switch style="display: block;padding-top: 10px;" v-model="formData.comboStatus"
                         active-color="#13ce66" inactive-color="#ff4949" :active-value="1" :inactive-value="0"
                         active-text="开启" inactive-text="关闭">
                     </el-switch>
                 </el-form-item>
-                <el-form-item label="部门" label-width="100px" prop="projectDepartment">
-                    <el-select v-model="formData.projectDepartment" placeholder="请选择部门">
-                        <el-option v-for="(item, index) in departmentList" :label="item.departmentName"
-                            :value="index + 1" :key="index"></el-option>
-                    </el-select>
-                </el-form-item>
                 <el-form-item>
                     <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='320px'
-                        v-loading="pageLoading" :title="title" node_key="subitemId" 
-                        :defaultProps="{ label: 'subitemName' }"></tree-transfer>
+                        v-loading="pageLoading" :title="title" node_key="projectId" :filter="true"
+                        :defaultProps="{ label: 'projectName' }"></tree-transfer>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -100,7 +92,7 @@ import treeTransfer from 'el-tree-transfer';
 export default {
     data() {
         return {
-            title: ['未分配细项', '已分配细项'],
+            title: ['未分配套餐', '已分配套餐'],
             loading: true,
             rules: {
                 comboName: [
@@ -131,11 +123,10 @@ export default {
             leftData: [],
             rightData: [],
             formData: {
-                projectId: "",
-                projectName: "",
-                projectStatus: 1,
-                projectPrice: "",
-                projectDepartment: ""
+                comboId: "",
+                comboName: "",
+                comboStatus: 1,
+                comboPrice: "",
             },
             subitemPageVo: {
                 pagen: 1,
@@ -188,20 +179,19 @@ export default {
             this.$refs['myformData'].validate((validata) => {
                 if (validata) {
                     // 当是添加操作时
-                    if (this.formData.projectId == "") {
+                    if (this.formData.comboId == "") {
                         this.$axios.post(
-                            "/project/addProject",
+                            "/combo/addCombo",
                             {
-                                projectName: this.formData.projectName,
-                                projectPrice: this.formData.projectPrice,
-                                projectStatus: this.formData.projectStatus,
-                                departmentId:this.formData.projectDepartment,
-                                subItems: this.rightData
+                                comboName: this.formData.comboName,
+                                comboPrice: this.formData.comboPrice,
+                                comboStatus: this.formData.comboStatus,
+                                projects: this.rightData
                             }
                         ).then((res) => {
                             if (res.code == 1) {
                                 this.formDialogVisible = false;
-                                this.getProject()
+                                this.getCombo()
                                 successInMsg("添加成功")
                             } else if (res.code == -2) {
                                 FailInMsg("细项已存在")
@@ -212,19 +202,18 @@ export default {
                         // 当是编辑操作时
                     } else {
                         this.$axios.post(
-                            "/project/editProject",
+                            "/combo/editCombo",
                             {
-                                projectId: this.formData.projectId,
-                                projectName: this.formData.projectName,
-                                projectPrice: this.formData.projectPrice,
-                                projectStatus: this.formData.projectStatus,
-                                departmentId:this.formData.projectDepartment,
-                                subItems: this.rightData
+                                comboId:this.formData.comboId,
+                                comboName: this.formData.comboName,
+                                comboPrice: this.formData.comboPrice,
+                                comboStatus: this.formData.comboStatus,
+                                projects: this.rightData
                             }
                         ).then((res) => {
                             if (res.code == 1) {
                                 this.formDialogVisible = false
-                                this.getProject()
+                                this.getCombo()
                                 defaultSuccess()
                             } else {
                                 defaultFail()
@@ -241,16 +230,15 @@ export default {
 
         },
 
-        openForm(res) {
+        openProjectForm(res) {
             if(this.$refs['myformData']){
                 this.$refs['myformData'].resetFields()
             }
             this.pageLoading = true
-            this.formData.projectId = res.projectId
-            this.formData.projectName = res.projectName
-            this.formData.projectPrice = res.projectPrice
-            this.formData.projectStatus = res.projectStatus
-            this.formData.projectDepartment = res.departmentId
+            this.formData.comboId = res.comboId
+            this.formData.comboName = res.comboName
+            this.formData.comboPrice = res.comboPrice
+            this.formData.comboStatus = res.comboStatus
             
             this.getDiffSubitem(res)
             this.getRightSubitem(res)
@@ -264,41 +252,38 @@ export default {
             if(this.$refs['myformData']){
                 this.$refs['myformData'].resetFields()
             }
-            this.formData.projectId = ""
-            this.formData.projectName = ""
-            this.formData.projectPrice = ""
-            this.formData.projectStatus = 1
-            this.formData.projectDepartment = ""
+            this.formData.comboId = ""
+            this.formData.comboName = ""
+            this.formData.comboPrice = ""
+            this.formData.comboStatus = 1
             this.rightData = []
-            this.getAllSubitem()
+            this.getAllProject()
 
             this.pageLoading = false;
             this.formDialogVisible = true
         },
-        getAllSubitem() {
+        getAllProject() {
             this.$axios.post(
-                "/subitem/getAllSubitemNoVo"
+                "/project/getAllProjectNoPage"
             ).then((res) => {
                 this.leftData = res.data
-
             })
         },
         getDiffSubitem(res) {
             this.$axios.post(
-                "/subitem/getDiffSubitem",
+                "/project/getDiffProject",
                 {
-                    projectId: res.projectId
+                    comboId: res.comboId
                 }
             ).then((res) => {
                 this.leftData = res.data
-
             })
         },
         getRightSubitem(res) {
             this.$axios.post(
-                "/project-subitem/getSubitemById",
+                "/combo-project/getProjectByComboId",
                 {
-                    projectId: res.projectId
+                    comboId: res.comboId
                 }
             ).then((res) => {
                 this.rightData = res.data;
@@ -308,24 +293,22 @@ export default {
         // 状态修改
         handleStatusChange(res) {
             let changeStatus;
-            if (res.subitemStatus == 1) {
+            if (res.comboStatus == 1) {
                 changeStatus = 0
             } else {
                 changeStatus = 1
             }
             this.$axios.post(
-                "/project/switchProjectStatus",
+                "/combo/switchComboStatus",
                 {
-                    projectId: res.projectId,
-                    projectStatus: changeStatus
+                    comboId: res.comboId,
+                    comboStatus: changeStatus
                 }
             ).then((res) => {
                 if (res.code == 1) {
                     defaultSuccess()
-                    this.getProject()
-                } else if (res.code == -2) {
-                    FailInMsg("该细项还有在其他项目中被使用，无法删除")
-                }
+                    this.getCombo()
+                } 
             })
         },
 

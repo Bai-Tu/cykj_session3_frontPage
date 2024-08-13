@@ -78,7 +78,7 @@
                 </el-form-item>
                 <el-form-item>
                     <tree-transfer :from_data="leftData" :to_data="rightData" mode="transfer" height='320px'
-                        v-loading="pageLoading" :title="title" node_key="subitemId" 
+                        v-loading="pageLoading" :title="title" node_key="subitemId" :filter="true"
                         :defaultProps="{ label: 'subitemName' }"></tree-transfer>
                 </el-form-item>
             </el-form>
@@ -308,7 +308,7 @@ export default {
         // 状态修改
         handleStatusChange(res) {
             let changeStatus;
-            if (res.subitemStatus == 1) {
+            if (res.projectStatus == 1) {
                 changeStatus = 0
             } else {
                 changeStatus = 1
@@ -324,7 +324,7 @@ export default {
                     defaultSuccess()
                     this.getProject()
                 } else if (res.code == -2) {
-                    FailInMsg("该细项还有在其他项目中被使用，无法删除")
+                    FailInMsg("该项目还有在其他套餐中被使用，无法删除")
                 }
             })
         },

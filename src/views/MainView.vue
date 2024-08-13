@@ -38,7 +38,7 @@
                     <el-dropdown>
                         <i class="el-icon-setting" style="margin-right: 15px;cursor:default;">
                             <el-dropdown-menu slot="dropdown">
-                                <el-dropdown-item>修改密码</el-dropdown-item>
+                                <el-dropdown-item >修改密码</el-dropdown-item>
                                 <el-dropdown-item @click.native="quitLogin">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
                             <span>{{ this.$store.getters.getAdmin.adminName }}</span>

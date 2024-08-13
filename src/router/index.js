@@ -75,6 +75,18 @@ var routes = [
                 component:()=>import("../views/ComboView"),
                 children:[]
             },
+            {
+                name:"patient",
+                path:"/patient",
+                component:()=>import("../views/PatientView"),
+                children:[]
+            },
+            {
+                name:"orderList",
+                path:"/orderList",
+                component:()=>import("../views/OrderListView"),
+                children:[]
+            },
         ]
     }
 ]
