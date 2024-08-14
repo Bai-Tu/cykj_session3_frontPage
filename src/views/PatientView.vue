@@ -8,12 +8,12 @@
             <span>姓名:</span>
             <el-input v-model="searchInput" placeholder="请输入内容" style="width:200px; padding-right: 10px"></el-input>
             <span>身份证:</span>
-            <el-input v-model="searchInputIden" placeholder="请输入身份证" style="width:200px; padding-right: 10px"></el-input>
+            <el-input v-model="searchInputIden" placeholder="请输入身份证"
+                style="width:200px; padding-right: 10px"></el-input>
             <span>电话:</span>
             <el-input v-model="searchInputTele" placeholder="请输入电话" style="width:200px; padding-right: 10px"></el-input>
             <el-button type="success" @click="doSearch">搜索</el-button>
             <el-button @click="reset">重置</el-button>
-            <el-button type="primary" style="position: absolute;right: 20px;" @click="addForm">添加</el-button>
             <el-button type="primary" style="position: absolute;right: 20px;" @click="addForm">添加</el-button>
         </div>
 
@@ -48,6 +48,7 @@
                 </template>
             </el-table-column>
         </el-table>
+
         <div class="block">
             <el-pagination layout="prev, pager, next" :total=total :page-size="pageSize"
                 @current-change="handleCurrentChange" :current-page="currentPage">
@@ -69,7 +70,7 @@
                 <el-form-item label="年龄" label-width="50px" prop="patientAge">
                     <el-input v-model="formData.patientAge" autocomplete="off" placeholer="输入年龄"></el-input>
                 </el-form-item>
-                <el-form-item label="状态" label-width="50px" >
+                <el-form-item label="状态" label-width="50px">
                     <el-switch style="display: block;padding-top: 10px;" v-model="formData.patientStatus"
                         active-color="#13ce66" inactive-color="#ff4949" :active-value="1" :inactive-value="0"
                         active-text="开启" inactive-text="关闭">
@@ -117,26 +118,26 @@ export default {
                 patientAge: [
                     { required: true, message: '请输入年龄', trigger: 'change' },
                 ],
-                patientName:[
+                patientName: [
                     { required: true, message: '请输入名字', trigger: 'change' },
                 ]
             },
             loading: true,
             pageLoading: true,
-            budgetDialogVisible:false,
+            budgetDialogVisible: false,
             tableData: [],
             total: 0,
             canInput: false,
             pageSize: 5,
             currentPage: 1,
-            searchPagen:1,
+            searchPagen: 1,
             formDialogVisible: false,
             dialogLoading: false,
             formLabelWidth: '120px',
             roleList: [],
-            searchInput:"",
-            searchInputIden:"",
-            searchInputTele:"",
+            searchInput: "",
+            searchInputIden: "",
+            searchInputTele: "",
             departmentList: [],
             formData: {
                 patientId: "",
@@ -144,10 +145,10 @@ export default {
                 patientStatus: 1,
                 patientPhone: "",
                 patientIdentity: "",
-                patientAge:"",
-                patientBuddget:""
+                patientAge: "",
+                patientBuddget: ""
             },
-            patientBuddget:""
+            patientBuddget: ""
         }
     },
     mounted() {
@@ -173,7 +174,7 @@ export default {
             this.roleList = JSON.parse(sessionStorage.getItem("roleList"))
             this.departmentList = JSON.parse(sessionStorage.getItem("departmentList"))
         },
-        addBudget(res){
+        addBudget(res) {
             this.budgetDialogVisible = true
             this.formData.patientId = res.patientId
             this.formData.patientBudget = res.patientBudget
@@ -188,11 +189,11 @@ export default {
                         this.$axios.post(
                             "/patient/addPatient",
                             {
-                                patientIdentity:this.formData.patientIdentity,
-                                patientPhone:this.formData.patientPhone,
-                                patientAge:this.formData.patientAge,
-                                patientName:this.formData.patientName,
-                                patientStatus:this.formData.patientStatus
+                                patientIdentity: this.formData.patientIdentity,
+                                patientPhone: this.formData.patientPhone,
+                                patientAge: this.formData.patientAge,
+                                patientName: this.formData.patientName,
+                                patientStatus: this.formData.patientStatus
                             }
                         ).then((res) => {
                             if (res.code == 1) {
@@ -210,12 +211,12 @@ export default {
                         this.$axios.post(
                             "/patient/editPatient",
                             {
-                                patientId:this.formData.patientId,
-                                patientIdentity:this.formData.patientIdentity,
-                                patientPhone:this.formData.patientPhone,
-                                patientAge:this.formData.patientAge,
-                                patientName:this.formData.patientName,
-                                patientStatus:this.formData.patientStatus
+                                patientId: this.formData.patientId,
+                                patientIdentity: this.formData.patientIdentity,
+                                patientPhone: this.formData.patientPhone,
+                                patientAge: this.formData.patientAge,
+                                patientName: this.formData.patientName,
+                                patientStatus: this.formData.patientStatus
                             }
                         ).then((res) => {
                             if (res.code == 1) {
@@ -265,28 +266,28 @@ export default {
             });
 
         },
-        submitAddBudget(){
+        submitAddBudget() {
             this.dialogLoading = true
             this.$axios.post(
                 "/patient/addBudget",
                 {
-                    patientId:this.formData.patientId,
-                    patientBuddget:this.patientBuddget
+                    patientId: this.formData.patientId,
+                    patientBuddget: this.patientBuddget
                 }
-            ).then((res)=>{
+            ).then((res) => {
                 this.dialogLoading = false;
-                if(res.code == 1){
+                if (res.code == 1) {
                     this.budgetDialogVisible = false
                     successInMsg("充值成功")
                     this.getPatient()
-                }else{
+                } else {
                     defaultFail()
                 }
             })
         },
         openForm(res) {
             this.formData.patientPhone = res.patientPhone
-            this.formData.patientIdentity=res.patientIdentity
+            this.formData.patientIdentity = res.patientIdentity
             this.formData.patientId = res.patientId
             this.formData.patientName = res.patientName
             this.formData.patientStatus = res.patientStatus
@@ -296,28 +297,28 @@ export default {
         },
         addForm() {
             this.formData.patientPhone = ""
-            this.formData.patientIdentity=""
+            this.formData.patientIdentity = ""
             this.formData.patientId = ""
             this.formData.patientName = ""
             this.formData.patientAge = ""
             this.formData.patientStatus = 1
             this.formDialogVisible = true
-            if(this.$refs['formData']){
+            if (this.$refs['formData']) {
                 this.$refs['formData'].resetFields()
             }
-            
+
             this.canInput = false
-            
+
         },
-        doSearch(){
+        doSearch() {
             this.loading = true;
             this.$axios.post(
                 "/patient/searchPatient",
                 {
                     pagen: this.searchPagen,
                     name: this.searchInput,
-                    tele:this.searchInputTele,
-                    iden:this.searchInputIden,
+                    tele: this.searchInputTele,
+                    iden: this.searchInputIden,
                     limit: this.pageSize
                 }
             ).then((res) => {
@@ -329,9 +330,9 @@ export default {
         },
         reset() {
             this.searchInput = ""
-            this.searchInputIden="",
-            this.searchInputTele= "",
-            this.currentPage = 1
+            this.searchInputIden = "",
+                this.searchInputTele = "",
+                this.currentPage = 1
             this.getPatient()
         },
 
@@ -365,16 +366,16 @@ export default {
 
 
         // 数据处理
-        timeMatter(row,colum,cellValue){   
-            let myDate = new Date(cellValue);    
-            return myDate.toLocaleString('zh-CN', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit', 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit' 
-        });
+        timeMatter(row, colum, cellValue) {
+            let myDate = new Date(cellValue);
+            return myDate.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
         },
         RoleFormatter(row, colum, cellValue) {
             return this.roleList[cellValue - 1].roleName
@@ -382,14 +383,11 @@ export default {
         DepartmentFormatter(row, colum, cellValue) {
             return this.departmentList[cellValue - 1].departmentName
         },
-        goOrderList(res){
+        goOrderList(res) {
+            this.$store.dispatch("setPatientId",res.patientId)
             this.$router.push({
-                path:"/orderList",
-                query:{
-                    patientId:res.patientId,
-                    patientBudget:res.patientBuddget
-                }
-        })
+                path: "/orderList"
+            })
         },
         goBack() {
             this.$router.push("/main")

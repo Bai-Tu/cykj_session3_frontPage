@@ -4,12 +4,26 @@
         </el-page-header>
         <hr>
 
+        <el-table :data="tableData" hight="500" style="width: 100%;margin-bottom: 20px;" row-key="menuId" border default-expand-all
+            :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
+            <el-table-column prop="menuName" label="菜单名" sortable width="180">
+            </el-table-column>
+            <el-table-column prop="menuStatus" label="菜单状态" width="120">
+                <template slot-scope="stateScope">
+                    <el-switch :value="stateScope.row.menuStatus" active-color="#13ce66" inactive-color="#ff4949"
+                        :active-value="1" :inactive-value="0" @change="handleStatusChange(stateScope.row)">
+                    </el-switch>
+                </template>
+            </el-table-column>
+        </el-table>
+
     </div>
 </template>
 
 <script>
-import { accountExist, defaultFail, FailInMsg } from '@/api/errorNoties';
+import { FailInMsg } from '@/api/errorNoties';
 import { defaultSuccess } from '@/api/successNoties';
+
 
 
 export default {
@@ -36,103 +50,47 @@ export default {
         }
     },
     mounted() {
-        this.getDepartment();
+        this.getMenuList();
     },
     methods: {
-        submitForm() {
-            this.dialogLoading = true
+        // 获得数据
+        getMenuList(){
             this.$axios.post(
-                "/department/addDepartment",
-                {
-                    departmentName: this.formLabelAlign.name,
-                    departmentStatus: this.formLabelAlign.type ? 1 : 0
-                }
-            ).then((res) => {
-                this.dialogLoading = false
-                if (res.code == 1) {
-                    defaultSuccess()
-                    this.dialogVisible = false
-                    this.getDepartment()
-                } else {
-                    accountExist()
-                }
+                "/menu/searchMenuByRoleInTreeNoPage"
+            ).then((res)=>{
+                this.tableData = res.data
             })
+        },
 
-        },
-        openDialog() {
-            this.dialogVisible = true,
-                this.formLabelAlign.name = '',
-                this.formLabelAlign.type = true
-        },
-        StatusFormatter(row, column, cellValue) {
-            return cellValue === 1 ? '开启' : '关闭';
-        },
-        getDepartment() {
-            this.$axios.post(
-                "/department/getAllDepartment",
-                {
-                    pagen: this.currentPage,
-                    limit: this.pageSize
-                }
-            ).then((res) => {
-                this.loading = false;
-                this.tableData = res.data.list
-                this.total = res.data.total
-            })
-        },
-        handleCurrentChange(index) {
-            this.searchPagen = index
-            this.currentPage = index
-            if (this.temSearch == '') {
-                this.getDepartment()
-            } else {
-                this.doSearch()
+        // 操作数据
+        handleStatusChange(res){
+            let changeStatus
+            if(res.menuStatus == 1){
+                changeStatus = 0
+            }else{
+                changeStatus = 1
             }
-
-        },
-        goBack() {
-            this.$router.push("/main")
-        },
-        switchDepartmentStatus(res) {
+            
             this.$axios.post(
-                "/department/switchDepartmentStatus",
+                "/menu/switchMenuStatus",
                 {
-                    departmentId: res.departmentId,
-                    departmentStatus: res.departmentStatus
+                    menuId:res.menuId,
+                    menuStatus:changeStatus
                 }
-            ).then((res) => {
-                if (res.code == -2) {
-                    FailInMsg("该科室下还有医生，无法删除");
-                }
-                else if (res.code == 1) {
+            ).then((res)=>{
+                if(res.code == 1){
                     defaultSuccess()
-                } else {
-                    defaultFail()
+                    this.getMenuList()
+                }else{
+                    FailInMsg("还有子项没有隐藏，无法隐藏")
                 }
-                this.getDepartment();
             })
+            
         },
-        reset() {
-            this.searchInput = ""
-            this.temSearch = ""
-            this.currentPage = 1
-            this.getDepartment()
-        },
-        doSearch() {
-            this.loading = true;
-            this.$axios.post(
-                "/department/getDepartmentInSearch",
-                {
-                    pagen: this.searchPagen,
-                    departmentName: this.searchInput,
-                    limit: this.pageSize
-                }
-            ).then((res) => {
-                this.loading = false;
-                this.temSearch = this.searchInput;
-                this.tableData = res.data.list
-                this.total = res.data.total
-            })
+
+        //固定方法 
+        goBack() {
+            this.$router.push("/patient")
         }
     },
 

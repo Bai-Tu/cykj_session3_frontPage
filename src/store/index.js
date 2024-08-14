@@ -10,7 +10,8 @@ var store = new Vuex.Store({//开启状态管理器
         admin:{},
         roleList:{},
         departmentList:{},
-        menuList:{}
+        menuList:{},
+        patientId:""
     },
     getters:{
         getAdmin(state){
@@ -24,6 +25,9 @@ var store = new Vuex.Store({//开启状态管理器
         },
         getMenuList(state){
             return state.menuList
+        },
+        getPatientId(state){
+            return state.patientId
         }
     },
     mutations:{
@@ -38,6 +42,9 @@ var store = new Vuex.Store({//开启状态管理器
         },
         setMenuList(state,newMenuList){
             state.menuList = newMenuList
+        },
+        setPatientId(state,newPatientId){
+            state.patientId = newPatientId
         }
     },
     actions:{
@@ -52,6 +59,9 @@ var store = new Vuex.Store({//开启状态管理器
         },
         setMenuList(store,newMenuList){
             store.commit("setMenuList",newMenuList)
+        },
+        setPatientId(store,newPatientId){
+            store.commit("setPatientId",newPatientId)
         },
         async getAdminInfo(store){
             return await http.get(
