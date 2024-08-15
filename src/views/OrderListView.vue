@@ -30,6 +30,9 @@
                             结账
                         </el-button>
                     </el-popconfirm>
+                    <el-button type="primary" slot="reference" style="margin-left: 20px;" @click="goDiagnose(scope.row)" :disabled="scope.row.orderStatus == 0">
+                        查询
+                    </el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -141,10 +144,9 @@ export default {
         getAllProject() {
             this.dialogLoading = true
             this.$axios.post(
-                "/project/getAllProjectNoPage",
+                "/project/getAllProjectWithStatus",
                 {
-                    pagen: this.currentPage,
-                    limit: this.pageSize
+                    projectStatus: 1
                 }
             ).then((res) => {
                 this.dialogLoading = false
@@ -154,12 +156,17 @@ export default {
         getAllCombo() {
             this.dialogLoading = true
             this.$axios.post(
-                "/combo/getAllComboNoPage"
+                "/combo/getAllComboWithStatus",
+                {
+                    comboStatus: 1
+                }
             ).then((res) => {
                 this.dialogLoading = false
                 this.dialogTableData2 = res.data
             })
         },
+
+        // 计算总价
         getSummaries(param) {
             const { columns } = param;
             const sums = [];
@@ -217,6 +224,8 @@ export default {
                     this.getOrderById();
                 } else if (res.code == -2) {
                     FailInMsg("余额不足")
+                } else{
+                    FailInMsg("服务器故障")
                 }
 
             })
@@ -256,20 +265,20 @@ export default {
             this.$axios.post(
                 "/orderList/addOrder",
                 {
-                    projects:this.multipleProjectSelection,
-                    combos:this.multipleComboSelection,
-                    price:sumprice,
-                    patientId:this.patientId,
+                    projects: this.multipleProjectSelection,
+                    combos: this.multipleComboSelection,
+                    price: sumprice,
+                    patientId: this.patientId,
                 }
-            ).then((res)=>{
+            ).then((res) => {
                 console.log(res);
-                if(res.code == 1){
+                if (res.code == 1) {
                     this.dialogLoading = false
                     this.formDialogVisible = false
                     defaultSuccess()
                     this.getOrderById()
                 }
-            })        
+            })
         },
         // 搜索
         doSearch() {
@@ -326,6 +335,14 @@ export default {
         },
         goBack() {
             this.$router.push("/patient")
+        },
+        goDiagnose(res){
+            this.$router.push({
+                path:"/diagnose",
+                query:{
+                    orderNumberByGo:res.orderNumber
+                }
+            })
         }
     }
 }

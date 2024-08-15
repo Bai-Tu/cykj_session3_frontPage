@@ -87,6 +87,30 @@ var routes = [
                 component:()=>import("../views/OrderListView"),
                 children:[]
             },
+            {
+                name:"diagnose",
+                path:"/diagnose",
+                component:()=>import("../views/DiagnoseView"),
+                children:[]
+            },
+            {
+                name:"conclution",
+                path:"/conclution",
+                component:()=>import("../views/ConclutionView"),
+                children:[]
+            },
+            {
+                name:"logs",
+                path:"/logs",
+                component:()=>import("../views/LogsView"),
+                children:[]
+            },
+            {
+                name:"data",
+                path:"/data",
+                component:()=>import("../views/DataView"),
+                children:[]
+            },
         ]
     }
 ]

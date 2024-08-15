@@ -277,7 +277,10 @@ export default {
         },
         getAllSubitem() {
             this.$axios.post(
-                "/subitem/getAllSubitemNoVo"
+                "/subitem/getAllSubitemNoVoWithStatus",
+                {
+                    subitemStatus:1
+                }
             ).then((res) => {
                 this.leftData = res.data
 
@@ -285,9 +288,10 @@ export default {
         },
         getDiffSubitem(res) {
             this.$axios.post(
-                "/subitem/getDiffSubitem",
+                "/subitem/getDiffSubitemWithStatus",
                 {
-                    projectId: res.projectId
+                    projectId: res.projectId,
+                    projectStatus:1
                 }
             ).then((res) => {
                 this.leftData = res.data

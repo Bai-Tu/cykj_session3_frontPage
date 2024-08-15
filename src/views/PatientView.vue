@@ -14,7 +14,13 @@
             <el-input v-model="searchInputTele" placeholder="请输入电话" style="width:200px; padding-right: 10px"></el-input>
             <el-button type="success" @click="doSearch">搜索</el-button>
             <el-button @click="reset">重置</el-button>
-            <el-button type="primary" style="position: absolute;right: 20px;" @click="addForm">添加</el-button>
+            <el-button type="primary" plain style="position: absolute;right: 210px;"
+                @click="downloadTemplate">下载模板</el-button>
+            <el-upload ref="upload" accept=".xlsx, .xls" action="phy/patient/uploadExcel" :headers="uploadHeaders"
+                :limit="1" :on-succees="handleUploadSuccess" :show-file-list="false">
+                <el-button type="primary" plain style="position: absolute;right: 100px; top:0px" >批量添加</el-button>
+            </el-upload>
+            <el-button type="primary" style="position: absolute;right: 20px; top:0px" @click="addForm">添加</el-button>
         </div>
 
         <el-table :data="tableData" style="width: 100%" v-loading="loading" stripe>
@@ -103,6 +109,7 @@
 <script>
 import { defaultFail, FailInMsg } from '@/api/errorNoties';
 import { defaultSuccess, successInMsg } from '@/api/successNoties';
+import { getToken } from '@/utils/authToken';
 
 
 export default {
@@ -147,6 +154,9 @@ export default {
                 patientIdentity: "",
                 patientAge: "",
                 patientBuddget: ""
+            },
+            uploadHeaders: {
+                Authorization: getToken()
             },
             patientBuddget: ""
         }
@@ -384,14 +394,37 @@ export default {
             return this.departmentList[cellValue - 1].departmentName
         },
         goOrderList(res) {
-            this.$store.dispatch("setPatientId",res.patientId)
+            this.$store.dispatch("setPatientId", res.patientId)
             this.$router.push({
                 path: "/orderList"
             })
         },
         goBack() {
             this.$router.push("/main")
+        },
+        //其他操作
+        downloadTemplate() {
+            const filePath = '/template.xlsx';
+            // 创建隐藏的链接元素
+            const link = document.createElement('a');
+            link.href = filePath;
+            link.download = 'template.xlsx'; // 设置下载文件的名称
+
+            // 触发点击事件
+            document.body.appendChild(link);
+            link.click();
+
+            // 移除链接元素
+            successInMsg("下载成功")
+            document.body.removeChild(link);
+        },
+        handleUploadSuccess(){
+            defaultSuccess()
+        },
+        triggerUpload(){
+            this.$refs.upload.submit(); // 触发上传
         }
+
     }
 }
 
