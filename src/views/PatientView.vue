@@ -185,6 +185,7 @@ export default {
             this.departmentList = JSON.parse(sessionStorage.getItem("departmentList"))
         },
         addBudget(res) {
+            this.patientBuddget = ""
             this.budgetDialogVisible = true
             this.formData.patientId = res.patientId
             this.formData.patientBudget = res.patientBudget

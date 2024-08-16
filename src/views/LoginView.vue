@@ -1,44 +1,23 @@
 <template>
     <div id="outside_container">
         <div class="container" id="container" v-loading="loading">
-            <div class="form-container sign-in-container">
-                <form onsubmit="return false;">
-                    <h1>登陆</h1>
-                    <p></p>
-                    <input type="text" placeholder="身份证/电话" v-model="acc" />
-                    <input type="password" placeholder="密码" v-model="pwd" />
-                    <p></p>
-                    <button @click="doLogin">登陆</button>
-                </form>
-            </div>
-            <div class="overlay-container">
-                <div class="overlay">
-                    <div class="overlay-panel overlay-right">
-                        <h1>尚未注册？</h1>
-                        <p></p>
-                        <input type="text" placeholder="身份证/电话" v-model="rig_acc">
-                        <input type="text" placeholder="密码" v-model="rig_pwd">
-                        <input type="text" placeholder="名字" v-model="rig_name">
-                        <input type="text" placeholder="年龄" v-model="rig_age">
-                        <div>
-                            <input type="text" placeholder="验证码" v-model="check_code"
-                                style="width: 150px; left: -15px; position: relative;">
-                            <img :src="imgUrl" @click="refreshCheckCode"
-                                style="width: 120px; position: relative; top: 10px;">
-                        </div>
-                        <button class="ghost" id="signUp" @click="doRegister">注册</button>
-                    </div>
-                </div>
-            </div>
+            <form onsubmit="return false;" style="margin-top: 50px;">
+                <h1 >后台登陆</h1>
+                <p></p>
+                <input type="text" placeholder="身份证/电话" v-model="acc" />
+                <input type="password" placeholder="密码" v-model="pwd" />
+                <p></p>
+                <button @click="doLogin">登陆</button>
+            </form>
         </div>
     </div>
 </template>
 
 <script>
-import { accFreeze, accNotLegal, accOrPwdError, accountExist, checkCodeError, systemError } from '@/api/errorNoties';
+import { accFreeze, accOrPwdError, FailInMsg } from '@/api/errorNoties';
 import { blockForThreeSeconds } from '@/api/outherTools';
-import { successEnter, successRigister } from '@/api/successNoties';
-import {  setToken } from '@/utils/authToken';
+import { successEnter } from '@/api/successNoties';
+import { setToken } from '@/utils/authToken';
 
 
 export default {
@@ -72,7 +51,7 @@ export default {
                     this.loading = false;
                     if (res.code == 1) {
                         // this.$store.dispatch('setAdmin', res.data)
-                        setToken(res.data)        
+                        setToken(res.data)
                         successEnter()
                         blockForThreeSeconds().then(() => {
                             if (location.href.includes('?redirect')) {
@@ -94,71 +73,12 @@ export default {
                     }
                 })
             } else {
-                this.$axios.post(
-                    "/patient/loginPatient",
-                    {
-                        acc:this.acc,
-                        pwd:this.pwd
-                    }
-                ).then((res)=>{
-                    console.log(res);
-                    
-                })
+                FailInMsg("账号错误")
             }
 
         },
         refreshCheckCode() {
             this.imgUrl = "/phy/tool/refreshCheckCode?a=" + new Date().getTime();
-        },
-        doRegister() {
-            this.loading = true;
-            if(this.rig_acc.includes("_")){
-                accNotLegal()
-                return
-            }
-
-            if (this.rig_acc.length != 11 && this.rig_acc.length != 18) {
-                accNotLegal()
-                return
-            }
-
-            this.$axios.post(
-                "/patient/registerPatient",
-                {
-                    acc: this.rig_acc,
-                    pwd: this.rig_pwd,
-                    age: this.rig_age,
-                    name: this.rig_name,
-                    code: this.check_code
-                }
-            ).then((res) => {
-                this.loading = false;
-                if (res.code == -2) {
-                    checkCodeError()
-                } else if (res.code == -1) {
-                    // this.accountExist();
-                    accountExist()
-                } else if (res.code == -100) {
-                    systemError()
-                } else {
-                    successRigister()
-                    alert("跳转还没做")
-                    // this.$store.dispatch('setAdmin', res.data)
-                    // blockForThreeSeconds().then(() => {
-                    //     if (location.href.includes('?redirect')) {
-                    //         var urlobj = location.href.split('redirect=')[1];
-                    //         var newDes = decodeURIComponent(urlobj);
-                    //         this.$router.push({
-                    //             path: newDes
-                    //         })
-                    //     } else {
-                    //         this.$router.push({
-                    //             path: "/main"
-                    //         })
-                    //     }
-                    // })
-                }
-            })
         },
 
     }

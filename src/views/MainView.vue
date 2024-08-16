@@ -38,7 +38,7 @@
                     <el-dropdown>
                         <i class="el-icon-setting" style="margin-right: 15px;cursor:default;">
                             <el-dropdown-menu slot="dropdown">
-                                <el-dropdown-item >修改密码</el-dropdown-item>
+                                <el-dropdown-item @click.native="openForm">修改密码</el-dropdown-item>
                                 <el-dropdown-item @click.native="quitLogin">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
                             <span>{{ this.$store.getters.getAdmin.adminName }}</span>
@@ -53,20 +53,53 @@
                 <el-footer>ljy 2024/8/8 - 2024/8/23 阿巴阿巴阿巴阿巴</el-footer>
             </el-container>
         </el-container>
+
+        <el-dialog title="总结" height="100%" :visible.sync="formDialogVisible" width="30%" v-loading="dialogLoading">
+            <div style="margin-bottom: 10px;" class="demo-input-suffix">
+                <span>旧密码:</span>
+                <el-input placeholder="请输入内容" v-model="dialogInput.oldPwd" style="width: 60%;">
+                </el-input>
+            </div>
+            <div style="margin-bottom: 10px;" class="demo-input-suffix">
+                <span>新密码:</span>
+                <el-input placeholder="请输入内容" v-model="dialogInput.newPwd" style="width: 60%;">
+                </el-input>
+            </div>
+            <div class="demo-input-suffix">
+                <span>确认密码:</span>
+                <el-input placeholder="请输入内容" v-model="dialogInput.newPwdCheck" style="width: 60%;">
+                </el-input>
+            </div>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="formDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="changePwd">确 定</el-button>
+            </div>
+
+        </el-dialog>
+
     </div>
 </template>
 
 <script>
 
-import { defaultSuccess } from '@/api/successNoties';
+import { FailInMsg } from '@/api/errorNoties';
+import {  successInMsg } from '@/api/successNoties';
 import { removeToken } from '@/utils/authToken';
+import {blockForThreeSeconds} from '@/api/outherTools'
 
 export default {
     data() {
         return {
+            formDialogVisible: false,
+            dialogLoading: false,
             menuList: [],
             name: '狗管理',
-            roleId: 1
+            roleId: 1,
+            dialogInput: {
+                oldPwd: "",
+                newPwd: "",
+                newPwdCheck: ""
+            }
         }
     },
     created() {
@@ -83,8 +116,49 @@ export default {
                 "/login"
             )
             removeToken()
-            defaultSuccess()
+            successInMsg("退出成功")
         },
+        openForm() {
+            this.formDialogVisible = true
+            this.dialogInput.newPwd = ""
+            this.dialogInput.newPwdCheck = ""
+            this.dialogInput.oldPwd = ""
+        },
+        changePwd() {
+            this.dialogLoading = true
+            if (this.dialogInput.newPwd === this.dialogInput.newPwdCheck) {
+                this.$axios.post(
+                    "/admin/changePwd",
+                    {
+                        id: this.roleId,
+                        oldPwd: this.dialogInput.oldPwd,
+                        newPwd: this.dialogInput.newPwd
+                    }
+                ).then((res) => {
+                    this.dialogLoading = false;
+                    if (res.code == 1) {
+                        this.formDialogVisible = false
+                        successInMsg("修改成功,即将退出")
+                        blockForThreeSeconds().then(() => {
+                            this.quitLogin()
+                        })
+                    } else {
+                        FailInMsg("旧密码错误")
+                        this.dialogInput.newPwd = ""
+                        this.dialogInput.newPwdCheck = ""
+                        this.dialogInput.oldPwd = ""
+                    }
+                })
+
+            } else {
+                FailInMsg("两次密码输入不一致")
+                this.dialogInput.newPwd = ""
+                this.dialogInput.newPwdCheck = ""
+                this.dialogInput.oldPwd = ""
+                this.dialogLoading = false
+            }
+        },
+
         handleOpen(key, keyPath) {
             console.log(key, keyPath);
         },
@@ -96,21 +170,21 @@ export default {
         },
         changeIndex() {
             this.name = this.$store.getters.getAdmin.adminName;
-            this.roleId = this.$store.getters.getAdmin.adminId;  
+            this.roleId = this.$store.getters.getAdmin.adminId;
         },
         getMenu() {
             this.$axios.post(
                 "/menu/searchMenuByRoleInTree",
                 {
-                    roleId:this.roleId
+                    roleId: this.roleId
                 }
-            ).then((res)=>{
+            ).then((res) => {
                 this.menuList = res.data
             })
         },
         getOtherInfo() {
             console.log("getOtherInfo被调用");
-            
+
             this.$axios.post(
                 "/admin/getAdminOtherInfo",
                 {
