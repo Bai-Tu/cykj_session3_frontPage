@@ -24,6 +24,7 @@ export function defaultSuccess() {
 export function successInMsg(msg){
     Notification.success({
         title: '成功',
-        message: msg
+        message: msg,
+        dangerouslyUseHTMLString: true
     })
 }

@@ -17,7 +17,7 @@
             <el-button type="primary" plain style="position: absolute;right: 210px;"
                 @click="downloadTemplate">下载模板</el-button>
             <el-upload ref="upload" accept=".xlsx, .xls" action="phy/patient/uploadExcel" :headers="uploadHeaders"
-                :limit="1" :on-succees="handleUploadSuccess" :show-file-list="false">
+                :limit="1" :on-success="handleUploadSuccess" :show-file-list="false">
                 <el-button type="primary" plain style="position: absolute;right: 100px; top:0px" >批量添加</el-button>
             </el-upload>
             <el-button type="primary" style="position: absolute;right: 20px; top:0px" @click="addForm">添加</el-button>
@@ -418,8 +418,15 @@ export default {
             successInMsg("下载成功")
             document.body.removeChild(link);
         },
-        handleUploadSuccess(){
-            defaultSuccess()
+        handleUploadSuccess(response){
+            this.$refs.upload.clearFiles(); // 清除上传文件
+            if (response.code == 1){
+                this.getPatient()
+                let successMsg = '上传成功，但以下账号插入失败，请查询是否已经注册<br>' + response.data
+                successInMsg(successMsg)
+            }else{
+                defaultFail()
+            }
         },
         triggerUpload(){
             this.$refs.upload.submit(); // 触发上传
