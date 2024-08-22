@@ -111,6 +111,12 @@ var routes = [
                 component:()=>import("../views/DataView"),
                 children:[]
             },
+            {
+                name:"statementlog",
+                path:"/statementlog",
+                component:()=>import("../views/StatementlogView"),
+                children:[]
+            },
         ]
     }
 ]

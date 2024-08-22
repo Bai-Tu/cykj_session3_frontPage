@@ -2,7 +2,7 @@
     <div id="outside_container">
         <div class="container" id="container" v-loading="loading">
             <form onsubmit="return false;" style="margin-top: 50px;">
-                <h1 >后台登陆</h1>
+                <h1>后台登陆</h1>
                 <p></p>
                 <input type="text" placeholder="身份证/电话" v-model="acc" />
                 <input type="password" placeholder="密码" v-model="pwd" />
@@ -38,42 +38,43 @@ export default {
         this.refreshCheckCode();
     },
     methods: {
-        doLogin() {
+        async doLogin() {
             this.loading = true;
-            if (this.acc.includes('_')) {//管理员
-                this.$axios.post(
-                    "/admin/adminLogin",
-                    {
+            try {
+                if (this.acc.includes('_')) { // 管理员
+                    const res = await this.$axios.post("/admin/adminLogin", {
                         acc: this.acc,
                         pwd: this.pwd
-                    }
-                ).then((res) => {
+                    });
+
                     this.loading = false;
+
                     if (res.code == 1) {
-                        // this.$store.dispatch('setAdmin', res.data)
-                        setToken(res.data)
-                        successEnter()
-                        blockForThreeSeconds().then(() => {
-                            if (location.href.includes('?redirect')) {
-                                var urlobj = location.href.split('redirect=')[1];
-                                var newDes = decodeURIComponent(urlobj);
-                                this.$router.push({
-                                    path: newDes
-                                })
-                            } else {
-                                this.$router.push({
-                                    path: "/main"
-                                })
-                            }
-                        })
+                        setToken(res.data);
+                        successEnter();
+                        await this.$store.dispatch("getAdminInfo"); // 使用 dispatch 而非 commit
+                        await blockForThreeSeconds(); // 等待 3 秒
+
+                        if (location.href.includes('?redirect')) {
+                            const urlobj = location.href.split('redirect=')[1];
+                            const newDes = decodeURIComponent(urlobj);
+                            this.$router.push({ path: newDes });
+                        } else {
+                            this.$router.push({ path: "/main" });
+                        }
                     } else if (res.code == -101) {
-                        accFreeze()
+                        accFreeze();
                     } else {
-                        accOrPwdError()
+                        accOrPwdError();
                     }
-                })
-            } else {
-                FailInMsg("账号错误")
+                } else {
+                    FailInMsg("账号错误");
+                }
+            } catch (error) {
+                console.error("Login failed:", error);
+                FailInMsg("登录失败，请重试");
+            } finally {
+                this.loading = false;
             }
 
         },
